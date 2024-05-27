@@ -1,4 +1,4 @@
-package com.westeroscraft.westerostools;
+package com.westeroscraft.westerostools.tools;
 
 import com.google.common.collect.Lists;
 import com.sk89q.worldedit.EditSession;
@@ -18,7 +18,6 @@ import com.sk89q.worldedit.util.formatting.text.TranslatableComponent;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.command.tool.DoubleActionBlockTool;
-
 
 import java.util.HashMap;
 import java.util.List;
@@ -109,25 +108,6 @@ public class BlockDataCycler implements DoubleActionBlockTool {
                 currentProperty = properties.get(index);
                 selectedProperties.put(player.getUniqueId(), currentProperty);
                 player.printInfo(TranslatableComponent.of("worldedit.tool.data-cycler.cycling", TextComponent.of(currentProperty.getName())));
-
-                // // Attempt to set unconnect state if it exists
-                // Property<?> unconnectProperty = block.getStates().keySet().stream().filter(isUnconnect).findFirst().orElse(null);
-                // if (unconnectProperty != null) {
-                //     BooleanProperty unconnectProp = (BooleanProperty) unconnectProperty;
-                //     BaseBlock newBlock = block.with(unconnectProp, Boolean.valueOf(true));
-
-                //     try (EditSession editSession = session.createEditSession(player)) {
-                //         editSession.disableBuffering();
-    
-                //         try {
-                //             editSession.setBlock(blockPoint, newBlock);
-                //         } catch (MaxChangedBlocksException e) {
-                //             player.printError(TranslatableComponent.of("worldedit.tool.max-block-changes"));
-                //         } finally {
-                //             session.remember(editSession);
-                //         }
-                //     }
-                // }
 
             }
         }

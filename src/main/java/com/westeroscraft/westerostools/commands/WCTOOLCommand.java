@@ -57,11 +57,7 @@ import com.sk89q.worldedit.regions.selector.limit.PermissiveSelectorLimits;
 import com.sk89q.worldedit.blocks.BaseItemStack;
 
 import com.westeroscraft.westerostools.WesterosTools;
-import com.westeroscraft.westerostools.BlockDataCycler;
-import com.westeroscraft.westerostools.BlockDef;
-import com.westeroscraft.westerostools.BlockSet;
-
-import static com.westeroscraft.westerostools.BlockDef.*;
+import com.westeroscraft.westerostools.tools.BlockDataCycler;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
