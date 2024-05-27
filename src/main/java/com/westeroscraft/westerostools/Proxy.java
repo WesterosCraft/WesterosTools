@@ -1,4 +1,4 @@
-package com.westeroscraft.schematicbrush;
+package com.westeroscraft.westerostools;
 
 /**
  * Server side proxy
