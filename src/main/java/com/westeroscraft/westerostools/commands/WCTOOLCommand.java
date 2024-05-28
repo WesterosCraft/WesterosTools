@@ -58,6 +58,7 @@ import com.sk89q.worldedit.blocks.BaseItemStack;
 
 import com.westeroscraft.westerostools.WesterosTools;
 import com.westeroscraft.westerostools.tools.BlockDataCycler;
+import com.westeroscraft.westerostools.tools.Extrude;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -128,6 +129,20 @@ public class WCTOOLCommand {
     Actor actor = wt.validateActor(source, "westerostools.extrude");
     if (actor != null) {
       LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+
+      // Initialize tool
+      Extrude tool = new Extrude();
+      Player player = (Player) actor;
+
+      // Bind tool to item
+      try {
+        BaseItemStack itemStack = player.getItemInHand(HandSide.MAIN_HAND);
+        session.setTool(itemStack.getType(), tool);
+        player.printInfo(TextComponent.of("Westeroscraft block extrude tool bound to current item."));
+        sendUnbindInstruction(player, UNBIND_COMMAND_COMPONENT);
+      } catch (InvalidToolBindException e) {
+        actor.printError(TextComponent.of(e.getMessage()));
+      }
     }
 
     return 1;
