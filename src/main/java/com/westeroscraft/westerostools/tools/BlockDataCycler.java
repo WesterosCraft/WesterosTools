@@ -70,7 +70,6 @@ public class BlockDataCycler implements DoubleActionBlockTool {
             }
 
             if (forward) {
-                block.getState(currentProperty);
                 int index = currentProperty.getValues().indexOf(block.getState(currentProperty));
                 index = (index + 1) % currentProperty.getValues().size();
                 @SuppressWarnings("unchecked")
