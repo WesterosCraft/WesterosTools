@@ -3,13 +3,13 @@ package com.westeroscraft.westerostools;
 import com.google.gson.annotations.SerializedName;
 
 /*
- * A single block definition associated with an id and type
+ * A single block definition associated with an id and variant
  */
 public class BlockDef {
   public String id;
-  public Type type;
+  public Variant variant;
 
-	public static enum Type {
+	public static enum Variant {
     @SerializedName("solid")
 		SOLID,
     @SerializedName("stairs")
@@ -62,7 +62,7 @@ public class BlockDef {
   public boolean equals(Object o) {
     if (o instanceof BlockDef) {
       BlockDef sd = (BlockDef) o;
-      return sd.id.equals(this.id) && (sd.type == this.type);
+      return sd.id.equals(this.id) && (sd.variant == this.variant);
     }
     return false;
   }
@@ -72,7 +72,7 @@ public class BlockDef {
 		return this.id;
   }
 
-  public Type getType() {
-    return this.type;
+  public Variant getVariant() {
+    return this.variant;
   }
 }

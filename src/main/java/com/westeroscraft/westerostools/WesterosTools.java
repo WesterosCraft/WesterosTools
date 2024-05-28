@@ -112,7 +112,8 @@ public class WesterosTools {
 	public static WorldEdit worldEdit;
 
 	public BlockSetConfig config;
-	public HashMap<String, HashMap<Type, String>> blockMap = new HashMap<String, HashMap<Type, String>>();
+	public HashMap<String, HashMap<Variant, String>> blockMap = new HashMap<String, HashMap<Variant, String>>();
+	public HashMap<String, Variant> variantMap = new HashMap<String, Variant>();
 	public HashMap<String, String> invBlockMap = new HashMap<String, String>();
 	   
 	public WesterosTools() {
@@ -235,14 +236,31 @@ public class WesterosTools {
 		blockMap.clear(); // Reset map
 
 		for (BlockSet set : config.blocksets) {
-			HashMap<Type, String> setMap = new HashMap<Type, String>();
+			HashMap<Variant, String> setMap = new HashMap<Variant, String>();
 			for (BlockDef block : set.blocks) {
-				setMap.put(block.type, block.id);
+				setMap.put(block.variant, block.id);
+				variantMap.put(block.id, block.variant);
 				invBlockMap.put(block.id, set.id);
 			}
 			blockMap.put(set.id, setMap);
 			if (set.altname != null) blockMap.put(set.altname, setMap);
 		}
+	}
+
+	/*
+	 * Get the variant of a given block
+	 * This will try to look up the variant in the variant map; if not found, it will attempt to
+	 * infer the variant from the block ID. Otherwise, it will assume "solid" as default.
+	 */
+	public Variant getBlockVariant(String id) {
+		if (variantMap.containsKey(id)) {
+			return variantMap.get(id);
+		}
+		for (Variant typ : Variant.values()) {
+			if (id.contains(typ.toString().toLowerCase()))
+				return typ;
+		}
+		return Variant.SOLID;
 	}
 
 	/* 
