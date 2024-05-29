@@ -1,74 +1,40 @@
 package com.westeroscraft.westerostools;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.network.NetworkConstants;
 
 import com.mojang.brigadier.CommandDispatcher;
 
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.LocalSession;
-import com.sk89q.worldedit.MaxChangedBlocksException;
 import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.command.tool.brush.Brush;
-import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
 import com.sk89q.worldedit.forge.ForgeAdapter;
-import com.sk89q.worldedit.forge.ForgePlayer;
 import com.sk89q.worldedit.forge.ForgeWorldEdit;
-import com.sk89q.worldedit.function.mask.BlockMask;
-import com.sk89q.worldedit.function.mask.Mask;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.math.Vector3;
-import com.sk89q.worldedit.math.transform.AffineTransform;
-import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.util.Direction;
-import com.sk89q.worldedit.util.io.Closer;
-import com.sk89q.worldedit.util.io.file.FilenameException;
-import com.sk89q.worldedit.world.block.BaseBlock;
-import com.sk89q.worldedit.world.block.BlockTypes;
 import com.westeroscraft.westerostools.commands.WCTOOLCommand;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.FileNotFoundException;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -77,17 +43,8 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static com.westeroscraft.westerostools.BlockDef.*;
 
@@ -181,9 +138,6 @@ public class WesterosTools {
 	private static class ConfigNotFoundException extends Exception {
 		public ConfigNotFoundException() {
 		}
-		public ConfigNotFoundException(String message) {
-			super(message);
-		}
 	}
 
 	/*
@@ -243,24 +197,54 @@ public class WesterosTools {
 				invBlockMap.put(block.id, set.id);
 			}
 			blockMap.put(set.id, setMap);
-			if (set.altname != null) blockMap.put(set.altname, setMap);
+			if (set.altname != null && !set.altname.equals("")) blockMap.put(set.altname, setMap);
 		}
 	}
 
 	/*
-	 * Get the variant of a given block
-	 * This will try to look up the variant in the variant map; if not found, it will attempt to
-	 * infer the variant from the block ID. Otherwise, it will assume "solid" as default.
+	 * Get the variant of a given block ID, if it belongs to a set. Returns NULL otherwise.
 	 */
 	public Variant getBlockVariant(String id) {
 		if (variantMap.containsKey(id)) {
 			return variantMap.get(id);
 		}
-		for (Variant typ : Variant.values()) {
-			if (id.contains(typ.toString().toLowerCase()))
-				return typ;
+		// for (Variant typ : Variant.values()) {
+		// 	if (id.contains(typ.toString().toLowerCase()))
+		// 		return typ;
+		// }
+		return null;
+	}
+
+	/*
+	 * Get a target ID given a block set name and a variant. Returns NULL
+	 * if a target block does not exist.
+	 */
+	public String getTargetId(String setname, Variant variant) {
+		if (blockMap.containsKey(setname)) {
+			HashMap<Variant, String> setMap = blockMap.get(setname);
+			if (setMap.containsKey(variant)) {
+				return setMap.get(variant);
+			}
 		}
-		return Variant.SOLID;
+		return null;
+	}
+
+	/*
+	 * Gets the set name corresponding to a given block ID. Returns NULL
+	 * if the block ID is not associated with a block set.
+	 */
+	public String getBlockSet(String id) {
+		if (invBlockMap.containsKey(id)) {
+			return invBlockMap.get(id);
+		}
+		return null;
+	}
+
+	/* 
+	 * Check if a block set exists.
+	 */
+	public boolean hasBlockSet(String setname) {
+		return blockMap.containsKey(setname);
 	}
 
 	/* 

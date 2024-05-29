@@ -13,7 +13,7 @@ public class BlockSet {
 
   public BlockSet(String n, String alt, List<BlockDef> bl) {
     this.id = n;
-    this.altname = (alt == null) ? null : alt;
+    this.altname = (alt == null || !alt.equals("")) ? null : alt;
     this.blocks = (bl == null) ? (new ArrayList<BlockDef>()) : bl;
   }
 }
