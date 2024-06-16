@@ -208,11 +208,19 @@ public class WesterosTools {
 		if (variantMap.containsKey(id)) {
 			return variantMap.get(id);
 		}
-		// for (Variant typ : Variant.values()) {
-		// 	if (id.contains(typ.toString().toLowerCase()))
-		// 		return typ;
-		// }
 		return null;
+	}
+
+	/*
+	 * Attempt to infer the variant of a given block ID from its name (solid by default).
+	 */
+	public Variant inferBlockVariant(String id) {
+		for (Variant typ : Variant.values()) {
+			if (id.contains(typ.toString().toLowerCase())) {
+				return typ;
+			}
+		}
+		return Variant.SOLID;
 	}
 
 	/*

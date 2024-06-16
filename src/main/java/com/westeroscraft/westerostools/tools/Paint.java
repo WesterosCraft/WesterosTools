@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 public class Paint implements DoubleActionBlockTool {
     private WesterosTools wt;
     private String selectedSet = null;
+    private boolean selectedSingleton = false;
 
     public Paint(WesterosTools westerostools) {
         wt = westerostools;
@@ -46,7 +47,12 @@ public class Paint implements DoubleActionBlockTool {
     }
 
     public void updateSet(Actor player, String set) {
+        updateSet(player, set, false);
+    }
+
+    public void updateSet(Actor player, String set, boolean singleton) {
         selectedSet = set;
+        selectedSingleton = singleton;
     }
 
     private boolean handlePaint(LocalConfiguration config, Player player, LocalSession session, Location clicked) {
@@ -64,16 +70,18 @@ public class Paint implements DoubleActionBlockTool {
             return true;
         }
         if (fromVariant == null) {
-            player.printError(TextComponent.of("Block cannot be painted on since it doesn't belong to a set"));
-            return true;
+            fromVariant = wt.inferBlockVariant(fromId);
+            // player.printError(TextComponent.of("Block cannot be painted on since it doesn't belong to a set"));
+            // return true;
         }
 
-        String toId = wt.getTargetId(selectedSet, fromVariant);
+        String toId = (selectedSingleton) ? selectedSet : wt.getTargetId(selectedSet, fromVariant);
 
         if (toId == null) {
             player.printError(TextComponent.of("Block cannot be painted on since variant '" + fromVariant.toString() + "' does not exist for set '" + selectedSet + "'"));
             return true;
         }
+
         
         // Create new block with target type and default state
         BlockType newBlockType = BlockTypes.get(toId);
@@ -131,13 +139,16 @@ public class Paint implements DoubleActionBlockTool {
         String setname = wt.getBlockSet(id);
 
         if (setname == null) {
-            player.printError(TextComponent.of("Block '" + id + "' does not belong to a block set"));
-            player.printDebug(TextComponent.of("Tip: use '/tool repl <id>' or '/tool repl ^<id>' for individual blocks"));
-            return true;
+            updateSet(player, id, true);
+            player.printInfo(TextComponent.of("Selecting singleton block '" + selectedSet + "'"));
+            // player.printError(TextComponent.of("Block '" + id + "' does not belong to a block set"));
+            // player.printDebug(TextComponent.of("Tip: use '/tool repl <id>' or '/tool repl ^<id>' for individual blocks"));
+            // return true;
         }
-
-        updateSet(player, setname);
-        player.printInfo(TextComponent.of("Selecting block set '" + selectedSet + "'"));
+        else {
+            updateSet(player, setname, false);
+            player.printInfo(TextComponent.of("Selecting block set '" + selectedSet + "'"));
+        }
 
         return true;
     }
