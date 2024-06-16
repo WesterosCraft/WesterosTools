@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 */
 public class Paint implements DoubleActionBlockTool {
     private WesterosTools wt;
+    private String selectedId = null;
     private String selectedSet = null;
     private boolean selectedSingleton = false;
 
@@ -78,8 +79,13 @@ public class Paint implements DoubleActionBlockTool {
         String toId = (selectedSingleton) ? selectedSet : wt.getTargetId(selectedSet, fromVariant);
 
         if (toId == null) {
-            player.printError(TextComponent.of("Block cannot be painted on since variant '" + fromVariant.toString() + "' does not exist for set '" + selectedSet + "'"));
-            return true;
+            if (selectedId == null) {
+                player.printError(TextComponent.of("Block cannot be painted on since variant '" + fromVariant.toString() + "' does not exist for set '" + selectedSet + "'"));
+                return true;
+            }
+            else {
+                toId = selectedId;
+            }
         }
 
         
@@ -136,6 +142,7 @@ public class Paint implements DoubleActionBlockTool {
         BaseBlock block = world.getFullBlock(blockPoint);
 
         String id = block.getBlockType().getId();
+        selectedId = id;
         String setname = wt.getBlockSet(id);
 
         if (setname == null) {
