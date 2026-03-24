@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"id": "westerostools",
+	"version": "${version}",
+	"name": "WesterosTools",
+	"description": "Build tools for WesterosBlocks modpack",
+	"authors": [
+		"Emoticone11"
+	],
+	"contact": {
+		"homepage": "https://www.westeroscraft.com/",
+		"sources": "https://github.com/WesterosCraft/WesterosTools"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/westerostools/icon.jpg",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.westeroscraft.westerostools.WesterosTools"
+		]
+	},
+	"mixins": [
+		"westerostools.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.2",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+    "worldedit": ">=7.3.8"
+	}
+}
