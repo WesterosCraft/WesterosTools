@@ -76,9 +76,14 @@ public class Paint implements DoubleActionBlockTool {
         Map<Property<?>, Object> fromStates = block.getStates();
 
         if (fromVariant == null) {
-            Variant inferred = wt.inferBlockVariant(fromId);
-            if (strict && !RADIUS_PAINTABLE_VARIANTS.contains(inferred)) return null;
-            fromVariant = inferred;
+            if (strict) {
+                // Radius mode: require explicit keyword match, no SOLID default (avoids painting air etc.)
+                Variant inferred = wt.tryInferBlockVariant(fromId);
+                if (inferred == null || !RADIUS_PAINTABLE_VARIANTS.contains(inferred)) return null;
+                fromVariant = inferred;
+            } else {
+                fromVariant = wt.inferBlockVariant(fromId); // defaults to SOLID for single-block
+            }
         }
 
         String toId = (selectedSingleton) ? selectedSet : wt.getTargetId(selectedSet, fromVariant);

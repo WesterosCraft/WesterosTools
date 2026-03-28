@@ -43,6 +43,8 @@ public class WCTOOLCommand {
       .then(Commands.literal("extrude")
         .executes(ctx -> extrude(ctx.getSource())))
       .then(Commands.literal("paint")
+        .then(Commands.argument("radius", IntegerArgumentType.integer(1))
+          .executes(ctx -> paint(null, IntegerArgumentType.getInteger(ctx, "radius"), ctx.getSource())))
         .then(Commands.argument("arg", StringArgumentType.word()).suggests(suggestedSets)
           .then(Commands.argument("radius", IntegerArgumentType.integer(1))
             .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), IntegerArgumentType.getInteger(ctx, "radius"), ctx.getSource())))
