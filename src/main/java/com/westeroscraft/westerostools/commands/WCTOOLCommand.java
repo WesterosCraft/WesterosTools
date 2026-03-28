@@ -18,6 +18,7 @@ import com.westeroscraft.westerostools.tools.Extrude;
 import com.westeroscraft.westerostools.tools.Paint;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -43,8 +44,10 @@ public class WCTOOLCommand {
         .executes(ctx -> extrude(ctx.getSource())))
       .then(Commands.literal("paint")
         .then(Commands.argument("arg", StringArgumentType.word()).suggests(suggestedSets)
-          .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), ctx.getSource())))
-        .executes(ctx -> paint(null, ctx.getSource()))));
+          .then(Commands.argument("radius", IntegerArgumentType.integer(1))
+            .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), IntegerArgumentType.getInteger(ctx, "radius"), ctx.getSource())))
+          .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), 1, ctx.getSource())))
+        .executes(ctx -> paint(null, 1, ctx.getSource()))));
 	}
 
   /*
@@ -102,13 +105,14 @@ public class WCTOOLCommand {
   /*
    * Tool that can paint blocks with a given block set
    */
-  public static int paint(String arg, CommandSourceStack source) {
+  public static int paint(String arg, int radius, CommandSourceStack source) {
     Actor actor = wt.validateActor(source, "westerostools.paint");
     if (actor != null) {
       LocalSession session = wt.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Paint tool = new Paint(wt);
+      tool.setRadius(radius);
       Player player = (Player) actor;
       if (arg != null) {
         if (wt.hasBlockSet(arg)) {

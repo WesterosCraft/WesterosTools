@@ -24,6 +24,7 @@ import com.westeroscraft.westerostools.WesterosTools;
 
 import static com.westeroscraft.westerostools.BlockDef.*;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -33,13 +34,22 @@ import javax.annotation.Nullable;
  * preserving the original block variant and state.
 */
 public class Paint implements DoubleActionBlockTool {
+    private static final EnumSet<Variant> RADIUS_PAINTABLE_VARIANTS = EnumSet.of(
+        Variant.SOLID, Variant.STAIRS, Variant.SLAB, Variant.WALL, Variant.FENCE
+    );
+
     private WesterosTools wt;
     private String selectedId = null;
     private String selectedSet = null;
     private boolean selectedSingleton = false;
+    private int radius = 1;
 
     public Paint(WesterosTools westerostools) {
         wt = westerostools;
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
     }
 
     @Override
@@ -56,45 +66,29 @@ public class Paint implements DoubleActionBlockTool {
         selectedSingleton = singleton;
     }
 
-    private boolean handlePaint(LocalConfiguration config, Player player, LocalSession session, Location clicked) {
-
-        World world = (World) clicked.getExtent();
-
-        BlockVector3 blockPoint = clicked.toVector().toBlockPoint();
+    /* Computes the painted block for a given position. When strict=true, returns null
+     * for blocks not explicitly in the blockset mapping (used for radius mode).
+     */
+    private BaseBlock computePaintedBlock(World world, BlockVector3 blockPoint, boolean strict) {
         BaseBlock block = world.getFullBlock(blockPoint);
         String fromId = block.getBlockType().id();
         Variant fromVariant = wt.getBlockVariant(fromId);
         Map<Property<?>, Object> fromStates = block.getStates();
 
-        if (selectedSet == null) {
-            player.printError(TextComponent.of("Paint material not selected"));
-            return true;
-        }
         if (fromVariant == null) {
-            fromVariant = wt.inferBlockVariant(fromId);
-            // player.printError(TextComponent.of("Block cannot be painted on since it doesn't belong to a set"));
-            // return true;
+            Variant inferred = wt.inferBlockVariant(fromId);
+            if (strict && !RADIUS_PAINTABLE_VARIANTS.contains(inferred)) return null;
+            fromVariant = inferred;
         }
 
         String toId = (selectedSingleton) ? selectedSet : wt.getTargetId(selectedSet, fromVariant);
-
         if (toId == null) {
-            if (selectedId == null) {
-                player.printError(TextComponent.of("Block cannot be painted on since variant '" + fromVariant.toString() + "' does not exist for set '" + selectedSet + "'"));
-                return true;
-            }
-            else {
-                toId = selectedId;
-            }
+            if (selectedId == null || strict) return null;
+            toId = selectedId;
         }
 
-        
-        // Create new block with target type and default state
         BlockType newBlockType = BlockTypes.get(toId);
-        if (newBlockType == null) {
-            player.printError(TextComponent.of("Unknown block ID '" + toId + "'"));
-            return true;
-        }
+        if (newBlockType == null) return null;
         BlockState newBlockState = newBlockType.getDefaultState();
 
         // Copy properties when possible
@@ -109,21 +103,64 @@ public class Paint implements DoubleActionBlockTool {
                 }
             }
         }
-
-        // Assign blockstate from properties and create new base block
         for (Map.Entry<Property<?>, Object> state : toStates.entrySet()) {
             @SuppressWarnings("unchecked")
             Property<Object> objProp = (Property<Object>) state.getKey();
             newBlockState = newBlockState.with(objProp, state.getValue());
         }
-        BaseBlock newBlock = newBlockState.toBaseBlock();
+        return newBlockState.toBaseBlock();
+    }
 
-        // Apply change
+    private boolean handlePaint(LocalConfiguration config, Player player, LocalSession session, Location clicked) {
+        if (selectedSet == null) {
+            player.printError(TextComponent.of("Paint material not selected"));
+            return true;
+        }
+        if (radius > 1 && config.maxRadius >= 0 && radius > config.maxRadius) {
+            player.printError(TextComponent.of("Radius " + radius + " exceeds maximum allowed radius of " + config.maxRadius));
+            return true;
+        }
+
+        World world = (World) clicked.getExtent();
+        BlockVector3 center = clicked.toVector().toBlockPoint();
+
         try (EditSession editSession = session.createEditSession(player)) {
             editSession.disableBuffering();
-
             try {
-                editSession.setBlock(blockPoint, newBlock);
+                if (radius <= 1) {
+                    // Attempt to resolve variant first
+                    BaseBlock block = world.getFullBlock(center);
+                    String fromId = block.getBlockType().id();
+                    Variant fromVariant = wt.getBlockVariant(fromId);
+                    if (fromVariant == null) fromVariant = wt.inferBlockVariant(fromId);
+
+                    if (fromVariant == null) {
+                        // Block doesn't belong to any known set
+                    } else {
+                        BaseBlock newBlock = computePaintedBlock(world, center, false);
+                        if (newBlock == null) {
+                            player.printError(TextComponent.of("Block cannot be painted on since variant '" + fromVariant + "' does not exist for set '" + selectedSet + "'"));
+                        } else {
+                            editSession.setBlock(center, newBlock);
+                        }
+                    }
+                } else {
+                    // Radius mode — only paint blocks explicitly in the blockset mapping
+                    int r = radius;
+                    for (int dx = -r; dx <= r; dx++) {
+                        for (int dy = -r; dy <= r; dy++) {
+                            for (int dz = -r; dz <= r; dz++) {
+                                if (dx*dx + dy*dy + dz*dz <= r*r) {
+                                    BlockVector3 pt = center.add(dx, dy, dz);
+                                    BaseBlock newBlock = computePaintedBlock(world, pt, true);
+                                    if (newBlock != null) {
+                                        editSession.setBlock(pt, newBlock);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             } catch (MaxChangedBlocksException e) {
                 player.printError(TranslatableComponent.of("worldedit.tool.max-block-changes"));
             } finally {
