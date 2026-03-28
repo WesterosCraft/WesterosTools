@@ -18,7 +18,7 @@ import com.westeroscraft.westerostools.tools.Extrude;
 import com.westeroscraft.westerostools.tools.Paint;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -43,13 +43,13 @@ public class WCTOOLCommand {
       .then(Commands.literal("extrude")
         .executes(ctx -> extrude(ctx.getSource())))
       .then(Commands.literal("paint")
-        .then(Commands.argument("radius", IntegerArgumentType.integer(1))
-          .executes(ctx -> paint(null, IntegerArgumentType.getInteger(ctx, "radius"), ctx.getSource())))
+        .then(Commands.argument("radius", DoubleArgumentType.doubleArg(1.0))
+          .executes(ctx -> paint(null, DoubleArgumentType.getDouble(ctx, "radius"), ctx.getSource())))
         .then(Commands.argument("arg", StringArgumentType.word()).suggests(suggestedSets)
-          .then(Commands.argument("radius", IntegerArgumentType.integer(1))
-            .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), IntegerArgumentType.getInteger(ctx, "radius"), ctx.getSource())))
-          .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), 1, ctx.getSource())))
-        .executes(ctx -> paint(null, 1, ctx.getSource()))));
+          .then(Commands.argument("radius", DoubleArgumentType.doubleArg(1.0))
+            .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), DoubleArgumentType.getDouble(ctx, "radius"), ctx.getSource())))
+          .executes(ctx -> paint(StringArgumentType.getString(ctx, "arg"), 1.0, ctx.getSource())))
+        .executes(ctx -> paint(null, 1.0, ctx.getSource()))));
 	}
 
   /*
@@ -107,7 +107,7 @@ public class WCTOOLCommand {
   /*
    * Tool that can paint blocks with a given block set
    */
-  public static int paint(String arg, int radius, CommandSourceStack source) {
+  public static int paint(String arg, double radius, CommandSourceStack source) {
     Actor actor = wt.validateActor(source, "westerostools.paint");
     if (actor != null) {
       LocalSession session = wt.worldEdit.getSessionManager().get(actor);

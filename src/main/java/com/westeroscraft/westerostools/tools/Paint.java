@@ -42,13 +42,13 @@ public class Paint implements DoubleActionBlockTool {
     private String selectedId = null;
     private String selectedSet = null;
     private boolean selectedSingleton = false;
-    private int radius = 1;
+    private double radius = 1.0;
 
     public Paint(WesterosTools westerostools) {
         wt = westerostools;
     }
 
-    public void setRadius(int radius) {
+    public void setRadius(double radius) {
         this.radius = radius;
     }
 
@@ -121,7 +121,7 @@ public class Paint implements DoubleActionBlockTool {
             player.printError(TextComponent.of("Paint material not selected"));
             return true;
         }
-        if (radius > 1 && config.maxRadius >= 0 && radius > config.maxRadius) {
+        if (radius > 1.0 && config.maxRadius >= 0 && radius > config.maxRadius) {
             player.printError(TextComponent.of("Radius " + radius + " exceeds maximum allowed radius of " + config.maxRadius));
             return true;
         }
@@ -132,7 +132,7 @@ public class Paint implements DoubleActionBlockTool {
         try (EditSession editSession = session.createEditSession(player)) {
             editSession.disableBuffering();
             try {
-                if (radius <= 1) {
+                if (radius <= 1.0) {
                     // Attempt to resolve variant first
                     BaseBlock block = world.getFullBlock(center);
                     String fromId = block.getBlockType().id();
@@ -151,11 +151,12 @@ public class Paint implements DoubleActionBlockTool {
                     }
                 } else {
                     // Radius mode — only paint blocks explicitly in the blockset mapping
-                    int r = radius;
+                    int r = (int) Math.ceil(radius);
+                    double r2 = radius * radius;
                     for (int dx = -r; dx <= r; dx++) {
                         for (int dy = -r; dy <= r; dy++) {
                             for (int dz = -r; dz <= r; dz++) {
-                                if (dx*dx + dy*dy + dz*dz <= r*r) {
+                                if (dx*dx + dy*dy + dz*dz <= r2) {
                                     BlockVector3 pt = center.add(dx, dy, dz);
                                     BaseBlock newBlock = computePaintedBlock(world, pt, true);
                                     if (newBlock != null) {
