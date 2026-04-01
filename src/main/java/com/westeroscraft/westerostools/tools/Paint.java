@@ -104,7 +104,7 @@ public class Paint implements DoubleActionBlockTool {
             if (propertyMap.containsKey(prop.getName())) {
                 Property<Object> propertyKey = propertyMap.get(prop.getName());
                 if (propertyKey.getValues().contains(fromStates.get(prop))) {
-                    toStates.put(prop, fromStates.get(prop));
+                    toStates.put(propertyKey, fromStates.get(prop));
                 }
             }
         }
