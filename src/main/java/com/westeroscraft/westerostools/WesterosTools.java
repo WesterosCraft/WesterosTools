@@ -1,5 +1,6 @@
 package com.westeroscraft.westerostools;
 
+import java.lang.reflect.Type;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,12 +12,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,11 +49,13 @@ public class WesterosTools implements ModInitializer {
 	public static final String MOD_ID = "westerostools";
 
 	public static final String BLOCK_SET_CONFIG = "blocksets.json";
+	public static final String CUSTOM_STATES_CONFIG = "custom_states.json";
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static Path modConfigDir;
 	public static String blockSetConfigFilename;
+	public static String customStatesConfigFilename;
 
 	public static ModContainer we;
 	public static WorldEdit worldEdit;
@@ -58,6 +64,10 @@ public class WesterosTools implements ModInitializer {
 	public HashMap<String, HashMap<Variant, String>> blockMap = new HashMap<String, HashMap<Variant, String>>();
 	public HashMap<String, Variant> variantMap = new HashMap<String, Variant>();
 	public HashMap<String, String> invBlockMap = new HashMap<String, String>();
+	public HashMap<String, String> altNameMap = new HashMap<String, String>();
+
+	public HashMap<String, HashMap<String, String>> customStatesMap = new HashMap<String, HashMap<String, String>>();
+	public HashMap<String, HashMap<String, String>> invCustomStatesMap = new HashMap<String, HashMap<String, String>>();
 
 	@Override
 	public void onInitialize() {
@@ -73,6 +83,7 @@ public class WesterosTools implements ModInitializer {
 				LOGGER.error("Failed to create westerostools config directory", e);
 		}
 		blockSetConfigFilename = modConfigDir.resolve(BLOCK_SET_CONFIG).toString();
+		customStatesConfigFilename = modConfigDir.resolve(CUSTOM_STATES_CONFIG).toString();
 
 		// Register commands
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -107,14 +118,18 @@ public class WesterosTools implements ModInitializer {
     worldEdit = WorldEdit.getInstance();
     LOGGER.info("Found WorldEdit " + worldedit.get().getMetadata().getVersion().getFriendlyString());
 
+		// Initialize block sets
 		try {
-				config = loadBlockSetConfig(blockSetConfigFilename);
+				config = loadModConfig(blockSetConfigFilename, BlockSetConfig.class);
 		} catch (ConfigNotFoundException | JsonSyntaxException | JsonIOException ex) {
 				LOGGER.warn(BLOCK_SET_CONFIG + " missing or could not be read; using empty block set map.");
 				config = new BlockSetConfig();
 		}
 		createBlockMap(config);
 		LOGGER.info("Block sets initialized");
+
+		// Load optional custom states config
+		createCustomStatesMap();
 	}
 
 	/*
@@ -127,10 +142,10 @@ public class WesterosTools implements ModInitializer {
 	private static class ConfigNotFoundException extends Exception {}
 
 	/*
-	 * Load block set config from external JSON.
+	 * Load config from external JSON, parsing into the given configType.
 	 */
-	private static BlockSetConfig loadBlockSetConfig(String filename) throws ConfigNotFoundException, JsonParseException {
-		BlockSetConfig config;
+	private static <T> T loadModConfig(String filename, Type configType) throws ConfigNotFoundException, JsonParseException {
+		T config;
 		File configFile = new File(filename);
 		InputStream in;
 		try {
@@ -144,7 +159,7 @@ public class WesterosTools implements ModInitializer {
 		BufferedReader rdr = new BufferedReader(new InputStreamReader(in));
 		Gson gson = new Gson();
 		try {
-			config = gson.fromJson(rdr, BlockSetConfig.class);
+			config = gson.fromJson(rdr, configType);
 		} catch (JsonParseException iox) {
 			throw iox;
 		} finally {
@@ -183,8 +198,36 @@ public class WesterosTools implements ModInitializer {
 				invBlockMap.put(block.id, set.id);
 			}
 			blockMap.put(set.id, setMap);
-			if (set.altname != null && !set.altname.equals("")) blockMap.put(set.altname, setMap);
+			if (set.altname != null && !set.altname.equals("")) {
+				blockMap.put(set.altname, setMap);
+				altNameMap.put(set.altname, set.id);
+			}
 		}
+	}
+
+	/*
+	 * Load the optional custom states config and convert it into a mapping.
+	 */
+	private void createCustomStatesMap() {
+		Type mapType = new TypeToken<HashMap<String, HashMap<String, String>>>(){}.getType();
+		try {
+				customStatesMap = loadModConfig(customStatesConfigFilename, mapType);
+		} catch (ConfigNotFoundException | JsonSyntaxException | JsonIOException ex) {
+				LOGGER.debug(CUSTOM_STATES_CONFIG + " not found");
+				return;
+		}
+
+		// Create inverted mapping
+		for (Map.Entry<String, HashMap<String, String>> setEntry : customStatesMap.entrySet()) {
+			String blockset = setEntry.getKey();
+			for (Map.Entry<String, String> blockEntry : setEntry.getValue().entrySet()) {
+				String id = blockEntry.getKey();
+				String state = blockEntry.getValue();
+				invCustomStatesMap.computeIfAbsent(id, k -> new HashMap<>()).put(state, blockset);
+			}
+		}
+
+		LOGGER.info("Loaded custom states mapping");
 	}
 
 	/*
@@ -233,13 +276,24 @@ public class WesterosTools implements ModInitializer {
 	}
 
 	/*
-	 * Gets the set name corresponding to a given block ID. Returns NULL
+	 * Gets the set name corresponding to a given block ID and properties. Returns NULL
 	 * if the block ID is not associated with a block set.
 	 */
-	public String getBlockSet(String id) {
+	public String getBlockSet(String id, List<String> properties) {
 		if (invBlockMap.containsKey(id)) {
 			return invBlockMap.get(id);
 		}
+
+		// Check custom states map as a fallback
+		if (invCustomStatesMap.containsKey(id)) {
+			HashMap<String, String> invCustomStatesMapId = invCustomStatesMap.get(id);
+			for (String prop : properties) {
+				if (invCustomStatesMapId.containsKey(prop)) {
+					return invCustomStatesMapId.get(prop);
+				}
+			}
+		}
+
 		return null;
 	}
 
@@ -248,6 +302,31 @@ public class WesterosTools implements ModInitializer {
 	 */
 	public boolean hasBlockSet(String setname) {
 		return blockMap.containsKey(setname);
+	}
+
+	/*
+	 * If a set name is an altname, map it to the canonical set ID.
+	 */
+	public String getCanonicalSetName(String setname) {
+		if (altNameMap.containsKey(setname)) return altNameMap.get(setname);
+		return setname;
+	}
+
+	/*
+	 * Check if a block id exists in the custom state mapping for a given block set.
+	 */
+	public boolean isInCustomStatesMap(String setname, String id) {
+		if (!customStatesMap.containsKey(setname)) return false;
+		HashMap<String, String> setCustomStates = customStatesMap.get(setname);
+		return setCustomStates.containsKey(id);
+	}
+
+	/*
+	 * Get the custom states from the custom state mapping for a given block set and ID.
+	 */
+	public String getCustomStates(String setname, String id) {
+		if (!isInCustomStatesMap(setname, id)) return null;
+		return customStatesMap.get(setname).get(id);
 	}
 
 	/* 

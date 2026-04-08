@@ -20,12 +20,13 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.command.tool.DoubleActionBlockTool;
 
+import com.westeroscraft.westerostools.BlockDef.Variant;
 import com.westeroscraft.westerostools.WesterosTools;
 
-import static com.westeroscraft.westerostools.BlockDef.*;
-
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
  
@@ -62,7 +63,7 @@ public class Paint implements DoubleActionBlockTool {
     }
 
     public void updateSet(Actor player, String set, boolean singleton) {
-        selectedSet = set;
+        selectedSet = wt.getCanonicalSetName(set);
         selectedSingleton = singleton;
     }
 
@@ -74,6 +75,11 @@ public class Paint implements DoubleActionBlockTool {
         String fromId = block.getBlockType().id();
         Variant fromVariant = wt.getBlockVariant(fromId);
         Map<Property<?>, Object> fromStates = block.getStates();
+
+        // If we have a custom state mapping defined for this block ID, use that mapping
+        if (wt.isInCustomStatesMap(selectedSet, fromId)) {
+            return computeBlockFromCustomStatesMap(block);
+        }
 
         if (fromVariant == null) {
             if (strict) {
@@ -87,6 +93,9 @@ public class Paint implements DoubleActionBlockTool {
         }
 
         String toId = (selectedSingleton) ? selectedSet : wt.getTargetId(selectedSet, fromVariant);
+
+        // If toId is not found in the blockset mapping (and is not a singleton), use the most recently
+        // selected block ID (unless in strict mode)
         if (toId == null) {
             if (selectedId == null || strict) return null;
             toId = selectedId;
@@ -114,6 +123,33 @@ public class Paint implements DoubleActionBlockTool {
             newBlockState = newBlockState.with(objProp, state.getValue());
         }
         return newBlockState.toBaseBlock();
+    }
+
+    /* 
+     * Computes the painted block based on the custom states mapping.
+     */
+    private BaseBlock computeBlockFromCustomStatesMap(BaseBlock block) {
+        String fromId = block.getBlockType().id();
+        String toStatesStr = wt.getCustomStates(selectedSet, fromId);
+
+        if (toStatesStr == null) return null;
+
+        BlockState blockState = block.toImmutableState();
+        @SuppressWarnings("unchecked")
+        Map<String, Property<Object>> propertyMap = (Map<String, Property<Object>>) block.getBlockType().getPropertyMap();
+
+        for (String pair : toStatesStr.split(",")) {
+            String[] parts = pair.split(":", 2);
+            if (parts.length != 2) continue;
+            Property<Object> prop = propertyMap.get(parts[0].trim());
+            if (prop == null) continue;
+            Object val = prop.getValueFor(parts[1].trim());
+            if (val != null) {
+                blockState = blockState.with(prop, val);
+            }
+        }
+
+        return blockState.toBaseBlock();
     }
 
     private boolean handlePaint(LocalConfiguration config, Player player, LocalSession session, Location clicked) {
@@ -186,7 +222,14 @@ public class Paint implements DoubleActionBlockTool {
 
         String id = block.getBlockType().id();
         selectedId = id;
-        String setname = wt.getBlockSet(id);
+
+        Map<Property<?>, Object> blockStates = block.getStates();
+        List<String> properties = new ArrayList<>();
+        for (Map.Entry<Property<?>, Object> entry : blockStates.entrySet()) {
+            properties.add(entry.getKey().getName() + ":" + entry.getValue().toString());
+        }
+
+        String setname = wt.getBlockSet(id, properties);
 
         if (setname == null) {
             updateSet(player, id, true);
