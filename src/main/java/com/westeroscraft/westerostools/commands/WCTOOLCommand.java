@@ -16,6 +16,7 @@ import com.westeroscraft.westerostools.WesterosTools;
 import com.westeroscraft.westerostools.tools.BlockDataCycler;
 import com.westeroscraft.westerostools.tools.Extrude;
 import com.westeroscraft.westerostools.tools.Paint;
+import com.westeroscraft.westerostools.tools.chisel.Chisel;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -40,6 +41,8 @@ public class WCTOOLCommand {
     source.register(Commands.literal("wctool")
       .then(Commands.literal("cycler")
         .executes(ctx -> cycler(ctx.getSource())))
+      .then(Commands.literal("chisel")
+        .executes(ctx -> chisel(ctx.getSource())))
       .then(Commands.literal("extrude")
         .executes(ctx -> extrude(ctx.getSource())))
       .then(Commands.literal("paint")
@@ -69,6 +72,32 @@ public class WCTOOLCommand {
         BaseItemStack itemStack = player.getItemInHand(HandSide.MAIN_HAND);
         session.setTool(itemStack.getType(), tool);
         player.printInfo(TextComponent.of("Westeroscraft block data cycler tool bound to current item."));
+        sendUnbindInstruction(player, UNBIND_COMMAND_COMPONENT);
+      } catch (InvalidToolBindException e) {
+        actor.printError(TextComponent.of(e.getMessage()));
+      }
+    }
+
+    return 1;
+  }
+
+  /*
+   * Tool that chisels a block into a related variant based on where the player clicks on the face.
+   */
+  public static int chisel(CommandSourceStack source) {
+    Actor actor = wt.validateActor(source, "westerostools.chisel");
+    if (actor != null) {
+      LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+
+      // Initialize tool
+      Chisel tool = new Chisel(wt);
+      Player player = (Player) actor;
+
+      // Bind tool to item
+      try {
+        BaseItemStack itemStack = player.getItemInHand(HandSide.MAIN_HAND);
+        session.setTool(itemStack.getType(), tool);
+        player.printInfo(TextComponent.of("Westeroscraft chisel tool bound to current item."));
         sendUnbindInstruction(player, UNBIND_COMMAND_COMPONENT);
       } catch (InvalidToolBindException e) {
         actor.printError(TextComponent.of(e.getMessage()));
