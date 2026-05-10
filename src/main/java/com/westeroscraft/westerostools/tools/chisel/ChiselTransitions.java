@@ -21,7 +21,7 @@ import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trBothVe
  *   EAST  face:  u=LOW→south, u=HIGH→north, v=LOW→bottom, v=HIGH→top
  *   WEST  face:  u=LOW→north, u=HIGH→south, v=LOW→bottom, v=HIGH→top
  *   UP    face:  u=LOW→west,  u=HIGH→east,  v=LOW→north,  v=HIGH→south
- *   DOWN  face:  u=LOW→west,  u=HIGH→east,  v=LOW→south,  v=HIGH→north
+ *   DOWN  face:  u=LOW→west,  u=HIGH→east,  v=LOW→north,  v=HIGH→south  (same as UP; (LOW,LOW)=NW for both)
  *
  * Template tokens (see {@link ChiselHelper.SideRule} for full docs):
  *   {half}      → "bottom" (UP) / "top" (DOWN) / "" (side)

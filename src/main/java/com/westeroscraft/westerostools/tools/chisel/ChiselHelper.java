@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  *   EAST   u = 1-(hz-bz)  south←→north,v = hy-by  bottom↑top
  *   WEST   u =   hz-bz    north←→south,v = hy-by  bottom↑top
  *   UP     u =   hx-bx    west←→east,  v = hz-bz  north↑south
- *   DOWN   u =   hx-bx    west←→east,  v = 1-(hz-bz) south↑north
+ *   DOWN   u =   hx-bx    west←→east,  v = hz-bz  north↑south  (same axes as UP; (LOW,LOW)=NW for both)
  */
 class ChiselHelper {
 
@@ -100,7 +100,7 @@ class ChiselHelper {
             case EAST  -> { u = 1.0 - (hz - bz);  v = hy - by;          }
             case WEST  -> { u = hz - bz;           v = hy - by;          }
             case UP    -> { u = hx - bx;           v = hz - bz;          }
-            case DOWN  -> { u = hx - bx;           v = 1.0 - (hz - bz); }
+            case DOWN  -> { u = hx - bx;           v = hz - bz;          }
             default    -> { return null; }
         }
 
@@ -293,9 +293,8 @@ class ChiselHelper {
     /** {dir.v}: direction the v-bin edge faces away from, for UP/DOWN only (lowercase). */
     private static String dirV(Direction face, UVBin v) {
         return switch (face) {
-            case UP   -> switch (v) { case LOW -> "south"; case HIGH -> "north"; default -> ""; };
-            case DOWN -> switch (v) { case LOW -> "north"; case HIGH -> "south"; default -> ""; };
-            default   -> "";
+            case UP, DOWN -> switch (v) { case LOW -> "south"; case HIGH -> "north"; default -> ""; };
+            default       -> "";
         };
     }
 
@@ -391,13 +390,10 @@ class ChiselHelper {
     /**
      * Generate transitions for both UP and DOWN faces from a single rule set.
      *
-     * <p>Rules are written in terms of the UP face axes
-     * (u=LOW→west, u=HIGH→east, v=LOW→north, v=HIGH→south).
-     * For the DOWN face the v-axis is flipped (v=LOW→south, v=HIGH→north), which is
-     * handled automatically by {@code {dir.v}}: the same rule with v=LOW produces
-     * {@code south} for UP and {@code north} for DOWN.  {@code {half}} likewise resolves
-     * to {@code "bottom"}/{@code "top"} per face.
-     * Use {@code {dir.u}} for east/west edges; those do not flip between UP and DOWN.
+     * <p>Both faces share the same UV axes: u=LOW→west, u=HIGH→east, v=LOW→north, v=HIGH→south,
+     * so (LOW,LOW) is the northwest corner for both.  Rules written with {@code {dir.v}},
+     * {@code {dir.u}}, and {@code {corner.inner}} resolve identically for UP and DOWN.
+     * Only {@code {half}} differs ({@code "bottom"} for UP, {@code "top"} for DOWN).
      */
     static List<Transition> trBothVertical(Variant from, List<SideRule> rules) {
         List<Transition> out = new ArrayList<>();
