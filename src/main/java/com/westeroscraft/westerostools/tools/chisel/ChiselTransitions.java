@@ -13,33 +13,7 @@ import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trAllFac
 import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trBothVertical;
 
 /**
- * Primary (left-click) chisel transitions: solid → variant.
- *
- * UV orientation quick-reference (LOW/MID/HIGH bins):
- *
- *   NORTH face:  u=LOW→east,  u=HIGH→west,  v=LOW→bottom, v=HIGH→top
- *   SOUTH face:  u=LOW→west,  u=HIGH→east,  v=LOW→bottom, v=HIGH→top
- *   EAST  face:  u=LOW→south, u=HIGH→north, v=LOW→bottom, v=HIGH→top
- *   WEST  face:  u=LOW→north, u=HIGH→south, v=LOW→bottom, v=HIGH→top
- *   UP    face:  u=LOW→west,  u=HIGH→east,  v=LOW→north,  v=HIGH→south
- *   DOWN  face:  u=LOW→west,  u=HIGH→east,  v=LOW→north,  v=HIGH→south  (same as UP; (LOW,LOW)=NW for both)
- *
- * Template tokens (see {@link ChiselHelper.SideRule} for full docs):
- *   {half}      → "bottom" (UP) / "top" (DOWN) / "" (side)
- *   {dir.face}  → clicked face name, lowercase         (side faces only)
- *   {dir.opp}   → opposite direction, lowercase         (side faces only)
- *   {dir.cw}    → face rotated 90° CW, lowercase        (side faces only)
- *   {dir.ccw}   → face rotated 90° CCW, lowercase       (side faces only)
- *   {dir.v}     → v-bin direction, lowercase            (UP/DOWN only)
- *   {dir.v+90}  → {dir.v} rotated 90° CW               (UP/DOWN only)
- *   {dir.v-90}  → {dir.v} rotated 90° CCW              (UP/DOWN only)
- *   {dir.v+180} → {dir.v} rotated 180°                 (UP/DOWN only)
- *   {dir.u}          → u-bin direction, lowercase            (UP/DOWN only)
- *   {dir.u+90}  → {dir.u} rotated 90° CW               (UP/DOWN only)
- *   {dir.u-90}  → {dir.u} rotated 90° CCW              (UP/DOWN only)
- *   {dir.u+180} → opposite of {dir.u} (u=LOW→west, u=HIGH→east) (UP/DOWN only)
- *   {corner.inner}   → "inner_right"/"inner_left" derived from dir.v and dir.u
- *                       (UP/DOWN corner cells only; see ChiselHelper.SideRule docs)
+ * Primary (left-click) chisel transitions
  */
 class ChiselTransitions {
 
