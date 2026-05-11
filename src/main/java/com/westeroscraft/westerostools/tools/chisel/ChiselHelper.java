@@ -32,7 +32,7 @@ class ChiselHelper {
     // UV + binning
     // -----------------------------------------------------------------------
 
-    enum UVBin { LOW, MID, HIGH }
+    enum UVBin { LOW, MID, HIGH, ALL }
 
     static UVBin binCoord(double t) {
         if (t < 1.0 / 3.0) return UVBin.LOW;
@@ -136,7 +136,14 @@ class ChiselHelper {
             if (f != face || u != uBin || v != vBin || variant != fromVariant) return false;
             if (fromStatePattern != null) {
                 for (var e : fromStatePattern.entrySet()) {
-                    if (!e.getValue().equalsIgnoreCase(actualState.get(e.getKey()))) return false;
+                    String actual = actualState.get(e.getKey());
+                    if (actual == null) return false;
+                    String pat = e.getValue();
+                    if (pat.startsWith("!")) {
+                        if (pat.substring(1).equalsIgnoreCase(actual)) return false;  // negation
+                    } else {
+                        if (!pat.equalsIgnoreCase(actual)) return false;
+                    }
                 }
             }
             return true;
@@ -260,14 +267,20 @@ class ChiselHelper {
         String half = switch (face) { case UP -> "bottom"; case DOWN -> "top"; default -> ""; };
         List<Transition> out = new ArrayList<>();
         for (SideRule rule : rules) {
-            String dirV = dirV(face, rule.v());
-            String dirU = dirU(face, rule.u());
-            String fromPat = rule.fromPatTemplate() == null ? null
-                : substitute(rule.fromPatTemplate(), face, half, dirV, dirU, rule.u());
-            String toState = substitute(rule.toStateTemplate(), face, half, dirV, dirU, rule.u());
-            out.add(fromPat == null
-                ? tr(face, rule.u(), rule.v(), from, rule.toVariant(), toState)
-                : tr(face, rule.u(), rule.v(), from, fromPat, rule.toVariant(), toState));
+            List<UVBin> uBins = (rule.u() == UVBin.ALL) ? List.of(UVBin.LOW, UVBin.MID, UVBin.HIGH) : List.of(rule.u());
+            List<UVBin> vBins = (rule.v() == UVBin.ALL) ? List.of(UVBin.LOW, UVBin.MID, UVBin.HIGH) : List.of(rule.v());
+            for (UVBin ub : uBins) {
+                for (UVBin vb : vBins) {
+                    String dirV = dirV(face, vb);
+                    String dirU = dirU(face, ub);
+                    String fromPat = rule.fromPatTemplate() == null ? null
+                        : substitute(rule.fromPatTemplate(), face, half, dirV, dirU, ub);
+                    String toState = substitute(rule.toStateTemplate(), face, half, dirV, dirU, ub);
+                    out.add(fromPat == null
+                        ? tr(face, ub, vb, from, rule.toVariant(), toState)
+                        : tr(face, ub, vb, from, fromPat, rule.toVariant(), toState));
+                }
+            }
         }
         return out;
     }
@@ -399,6 +412,17 @@ class ChiselHelper {
         List<Transition> out = new ArrayList<>();
         out.addAll(trFace(Direction.UP,   from, rules));
         out.addAll(trFace(Direction.DOWN, from, rules));
+        return out;
+    }
+
+    /**
+     * Generate transitions for all six faces (N, S, E, W, UP, DOWN).
+     * Delegates to {@link #trAllSides} and {@link #trBothVertical}.
+     */
+    static List<Transition> trAllFaces(Variant from, List<SideRule> rules) {
+        List<Transition> out = new ArrayList<>();
+        out.addAll(trAllSides(from, rules));
+        out.addAll(trBothVertical(from, rules));
         return out;
     }
 

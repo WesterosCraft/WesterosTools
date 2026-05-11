@@ -9,6 +9,7 @@ import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.UVBin.*;
 import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.halfSplit;
 import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.sr;
 import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trAllSides;
+import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trAllFaces;
 import static com.westeroscraft.westerostools.tools.chisel.ChiselHelper.trBothVertical;
 
 /**
@@ -355,9 +356,82 @@ class ChiselTransitions {
       // ===================================================================
       // WALL
       // ===================================================================
-      // TODO
+      
+      // --- side faces (N/S/E/W) ----------------------------------
 
-      // TODO: slab -> carpet?
+      LIST.addAll(trAllSides(Variant.WALL, List.of(
+         // --- remove connection ----------
+         sr(MID,  ALL,  "{dir.face}:!none", Variant.WALL, "{dir.face}:none"),
+         sr(LOW,  ALL,  "{dir.cw}:!none",   Variant.WALL, "{dir.cw}:none"),
+         sr(HIGH, ALL,  "{dir.ccw}:!none",  Variant.WALL, "{dir.ccw}:none"),
+         // --- remove post ----------
+         sr(MID,  ALL,  "{dir.cw}:!none,{dir.face}:none,{dir.ccw}:none",   Variant.WALL, "up:false"),
+         sr(HIGH, ALL,  "{dir.cw}:!none,{dir.face}:none,{dir.ccw}:none",   Variant.WALL, "up:false"),
+         sr(LOW,  ALL,  "{dir.cw}:none,{dir.face}:none,{dir.ccw}:!none",   Variant.WALL, "up:false"),
+         sr(MID,  ALL,  "{dir.cw}:none,{dir.face}:none,{dir.ccw}:!none",   Variant.WALL, "up:false"),
+         sr(ALL,  ALL,  "{dir.cw}:none,{dir.face}:none,{dir.ccw}:none,{dir.opp}:!none",   Variant.WALL, "up:false"),
+         // --- fence ----------
+         sr(ALL,  ALL,  "{dir.cw}:none,{dir.face}:none,{dir.ccw}:none,{dir.opp}:none",   Variant.FENCE, "{dir.cw}:false,{dir.face}:false,{dir.ccw}:false,{dir.opp}:false"),
+         sr(MID,  ALL,  "{dir.cw}:!none,{dir.face}:none,{dir.ccw}:!none,{dir.opp}:none", Variant.FENCE, "{dir.cw}:true,{dir.face}:false,{dir.ccw}:true,{dir.opp}:false"),
+         sr(MID,  ALL,  "{dir.cw}:!none,{dir.face}:none,{dir.ccw}:!none,{dir.opp}:!none", Variant.FENCE, "{dir.cw}:true,{dir.face}:false,{dir.ccw}:true,{dir.opp}:true")
+      )));
+
+      // --- UP/DOWN faces -----------------------------------------
+
+      LIST.addAll(trBothVertical(Variant.WALL, List.of(
+         // --- remove connection ---------
+         sr(LOW,  MID,  "west:!none",  Variant.WALL,   "west:none"),
+         sr(MID,  LOW,  "north:!none", Variant.WALL,   "north:none"),
+         sr(HIGH, MID,  "east:!none",  Variant.WALL,   "east:none"),
+         sr(MID,  HIGH, "south:!none", Variant.WALL,   "south:none"),
+         // --- remove post ---------
+         sr(LOW,  LOW,  "east:!none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  LOW,  "east:!none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(LOW,  MID,  "east:!none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  MID,  "east:!none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  LOW,  "east:none,south:!none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(HIGH, LOW,  "east:none,south:!none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  MID,  "east:none,south:!none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(HIGH, MID,  "east:none,south:!none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  MID,  "east:none,south:none,west:!none,north:!none",  Variant.WALL,  "up:false"),
+         sr(HIGH, MID,  "east:none,south:none,west:!none,north:!none",  Variant.WALL,  "up:false"),
+         sr(MID,  HIGH, "east:none,south:none,west:!none,north:!none",  Variant.WALL,  "up:false"),
+         sr(HIGH, HIGH, "east:none,south:none,west:!none,north:!none",  Variant.WALL,  "up:false"),
+         sr(LOW,  MID,  "east:!none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         sr(MID,  MID,  "east:!none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         sr(LOW,  HIGH, "east:!none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         sr(MID,  HIGH, "east:!none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         // ---
+         sr(LOW,  ALL,  "east:!none,south:none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  ALL,  "east:!none,south:none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(ALL,  LOW,  "east:none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(ALL,  MID,  "east:none,south:!none,west:none,north:none",  Variant.WALL,  "up:false"),
+         sr(MID,  ALL,  "east:none,south:none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(HIGH, ALL,  "east:none,south:none,west:!none,north:none",  Variant.WALL,  "up:false"),
+         sr(ALL,  MID,  "east:none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         sr(ALL,  HIGH, "east:none,south:none,west:none,north:!none",  Variant.WALL,  "up:false"),
+         // --- fence ---------
+         sr(MID,  MID,  "east:!none,south:!none,west:!none,north:!none",  Variant.FENCE,  "east:true,south:true,west:true,north:true"),
+         // ---
+         sr(LOW,  MID,  "east:!none,south:!none,west:none,north:!none",   Variant.FENCE,  "east:true,south:true,west:false,north:true"),
+         sr(MID,  MID,  "east:!none,south:!none,west:none,north:!none",   Variant.FENCE,  "east:true,south:true,west:false,north:true"),
+         sr(MID,  LOW,  "east:!none,south:!none,west:!none,north:none",   Variant.FENCE,  "east:true,south:true,west:true,north:false"),
+         sr(MID,  MID,  "east:!none,south:!none,west:!none,north:none",   Variant.FENCE,  "east:true,south:true,west:true,north:false"),
+         sr(MID,  MID,  "east:none,south:!none,west:!none,north:!none",   Variant.FENCE,  "east:false,south:true,west:true,north:true"),
+         sr(HIGH, MID,  "east:none,south:!none,west:!none,north:!none",   Variant.FENCE,  "east:false,south:true,west:true,north:true"),
+         sr(MID,  MID,  "east:!none,south:none,west:!none,north:!none",   Variant.FENCE,  "east:true,south:false,west:true,north:true"),
+         sr(MID,  HIGH, "east:!none,south:none,west:!none,north:!none",   Variant.FENCE,  "east:true,south:false,west:true,north:true"),
+         // ---
+         sr(ALL,  ALL,  "east:none,south:none,west:none,north:none",  Variant.FENCE,  "east:false,south:false,west:false,north:false")
+      )));
+
+      // ===================================================================
+      // SLAB
+      // ===================================================================
+
+      LIST.addAll(trAllFaces(Variant.SLAB, List.of(
+         sr(ALL, ALL, "type:bottom",  Variant.CARPET, "")
+      )));
 
    }
 }
