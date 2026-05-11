@@ -54,6 +54,7 @@ class ChiselTransitions {
       // --- side faces (N/S/E/W) ----------------------------------
 
       LIST.addAll(trAllSides(Variant.SOLID, List.of(
+         // --- to stairs/slab ---------
          sr(LOW,  LOW,  Variant.STAIRS, "half:top,shape:inner_right,facing:{dir.opp}"),
          sr(MID,  LOW,  Variant.STAIRS, "half:top,shape:straight,facing:{dir.opp}"),
          sr(HIGH, LOW,  Variant.STAIRS, "half:top,shape:inner_left,facing:{dir.opp}"),
@@ -68,6 +69,10 @@ class ChiselTransitions {
       // --- UP/DOWN faces -----------------------------------------
 
       LIST.addAll(trBothVertical(Variant.SOLID, List.of(
+         // --- to path/layer ---------
+         sr(ALL,  ALL,  Variant.PATH,   ""),
+         sr(ALL,  ALL,  Variant.LAYER,  "layers:7"),
+         // --- to stairs/slab ---------
          sr(MID,  MID,  Variant.SLAB,   "type:{half}"),
          sr(MID,  LOW,  Variant.STAIRS, "half:{half},shape:straight,facing:{dir.v}"),
          sr(MID,  HIGH, Variant.STAIRS, "half:{half},shape:straight,facing:{dir.v}"),
@@ -426,11 +431,62 @@ class ChiselTransitions {
       )));
 
       // ===================================================================
+      // FENCE
+      // ===================================================================
+      
+      // --- side faces (N/S/E/W) ----------------------------------
+
+      LIST.addAll(trAllSides(Variant.WALL, List.of(
+         // --- remove connection ----------
+         sr(MID,  ALL,  "{dir.face}:true", Variant.WALL, "{dir.face}:false"),
+         sr(LOW,  ALL,  "{dir.cw}:true",   Variant.WALL, "{dir.cw}:false"),
+         sr(HIGH, ALL,  "{dir.ccw}:true",  Variant.WALL, "{dir.ccw}:false")
+      )));
+
+      // --- UP/DOWN faces -----------------------------------------
+
+      LIST.addAll(trBothVertical(Variant.WALL, List.of(
+         // --- remove connection ---------
+         sr(LOW,  MID,  "west:true",  Variant.WALL,   "west:false"),
+         sr(MID,  LOW,  "north:true", Variant.WALL,   "north:false"),
+         sr(HIGH, MID,  "east:true",  Variant.WALL,   "east:false"),
+         sr(MID,  HIGH, "south:true", Variant.WALL,   "south:false")
+      )));
+
+      // ===================================================================
       // SLAB
       // ===================================================================
 
       LIST.addAll(trAllFaces(Variant.SLAB, List.of(
          sr(ALL, ALL, "type:bottom",  Variant.CARPET, "")
+      )));
+
+      // ===================================================================
+      // PATH
+      // ===================================================================
+
+      // --- UP/DOWN faces -----------------------------------------
+
+      LIST.addAll(trBothVertical(Variant.PATH, List.of(
+         // --- to path/layer ---------
+         sr(ALL,  ALL,  Variant.LAYER,  "layers:7")
+      )));
+
+      // ===================================================================
+      // LAYER
+      // ===================================================================
+
+      // --- UP/DOWN faces -----------------------------------------
+
+      LIST.addAll(trBothVertical(Variant.LAYER, List.of(
+         // --- to path/layer ---------
+         sr(ALL,  ALL,  "layers:8",  Variant.LAYER,  "layers:7"),
+         sr(ALL,  ALL,  "layers:7",  Variant.LAYER,  "layers:6"),
+         sr(ALL,  ALL,  "layers:6",  Variant.LAYER,  "layers:5"),
+         sr(ALL,  ALL,  "layers:5",  Variant.LAYER,  "layers:4"),
+         sr(ALL,  ALL,  "layers:4",  Variant.LAYER,  "layers:3"),
+         sr(ALL,  ALL,  "layers:3",  Variant.LAYER,  "layers:2"),
+         sr(ALL,  ALL,  "layers:2",  Variant.LAYER,  "layers:1")
       )));
 
    }

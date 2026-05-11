@@ -437,15 +437,4 @@ class ChiselHelper {
             snap.put(e.getKey().getName(), String.valueOf(e.getValue()));
         return snap;
     }
-
-    @Nullable
-    static Transition findTransition(List<Transition> table,
-                                     Direction face, UVBin u, UVBin v,
-                                     Variant fromVariant,
-                                     Map<String,String> fromState) {
-        for (Transition tx : table) {
-            if (tx.matches(face, u, v, fromVariant, fromState)) return tx;
-        }
-        return null;
-    }
 }

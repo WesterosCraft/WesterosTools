@@ -140,27 +140,29 @@ public class Chisel implements DoubleActionBlockTool {
         player.printInfo(TextComponent.of("(Variant " + fromVariant.toString() + ") Clicked face=" + face.toString() + ", u=" + uBin.toString() + ", v=" + vBin.toString()));
 
         Map<String,String> fromState = ChiselHelper.stateSnapshot(block);
-        Transition tx = ChiselHelper.findTransition(table, face, uBin, vBin, fromVariant, fromState);
-        if (tx == null) {
-            player.printInfo(TextComponent.of("Could not find transition for fromState=" + fromState.toString()));
-            return false;
-        }
 
-        BaseBlock newBlock = applyTransition(world, pos, block, tx);
-        if (newBlock == null) return false;
+        for (Transition tx : table) {
+            if (!tx.matches(face, uBin, vBin, fromVariant, fromState)) continue;
 
-        try (EditSession editSession = session.createEditSession(player)) {
-            editSession.disableBuffering();
-            try {
-                editSession.setBlock(pos, newBlock);
-            } catch (MaxChangedBlocksException e) {
-                player.printError(com.sk89q.worldedit.util.formatting.text.TranslatableComponent
-                    .of("worldedit.tool.max-block-changes"));
-            } finally {
-                session.remember(editSession);
+            BaseBlock newBlock = applyTransition(world, pos, block, tx);
+            if (newBlock == null) continue;  // variant not in this block's set; try next match
+
+            try (EditSession editSession = session.createEditSession(player)) {
+                editSession.disableBuffering();
+                try {
+                    editSession.setBlock(pos, newBlock);
+                } catch (MaxChangedBlocksException e) {
+                    player.printError(com.sk89q.worldedit.util.formatting.text.TranslatableComponent
+                        .of("worldedit.tool.max-block-changes"));
+                } finally {
+                    session.remember(editSession);
+                }
             }
+            return true;
         }
-        return true;
+
+        player.printInfo(TextComponent.of("Could not find transition for fromState=" + fromState.toString()));
+        return false;
     }
 
     /** Primary click — sculpt based on click zone. */
