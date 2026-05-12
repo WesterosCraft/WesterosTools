@@ -442,7 +442,6 @@ class ChiselTransitions {
       // --- UP/DOWN faces -----------------------------------------
 
       LIST.addAll(trBothVertical(Variant.PATH, List.of(
-         // --- to path/layer ---------
          sr(ALL,  ALL,  Variant.LAYER,  "layers:7")
       )));
 
@@ -453,7 +452,6 @@ class ChiselTransitions {
       // --- UP/DOWN faces -----------------------------------------
 
       LIST.addAll(trBothVertical(Variant.LAYER, List.of(
-         // --- to path/layer ---------
          sr(ALL,  ALL,  "layers:8",  Variant.LAYER,  "layers:7"),
          sr(ALL,  ALL,  "layers:7",  Variant.LAYER,  "layers:6"),
          sr(ALL,  ALL,  "layers:6",  Variant.LAYER,  "layers:5"),
