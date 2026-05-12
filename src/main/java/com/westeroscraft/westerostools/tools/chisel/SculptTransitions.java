@@ -251,8 +251,8 @@ class SculptTransitions {
          sr(HIGH, MID,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.SOLID,   ""),
          sr(HIGH, HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_right,facing:{dir.opp},half:top"),
          // ---
-         sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:none",   Variant.WALL,    "{dir.face}:low"),
-         sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:none,{dir.ccw}:!none",   Variant.WALL,    "{dir.face}:low"),
+         sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:none,up:true",  Variant.WALL,    "{dir.face}:low"),
+         sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:none,{dir.ccw}:!none,up:true",  Variant.WALL,    "{dir.face}:low"),
          sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:none,{dir.ccw}:none,up:true",   Variant.WALL,    "{dir.face}:low"),
          // ---
          sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:none,{dir.ccw}:none,{dir.opp}:!none,up:false",   Variant.WALL,    "up:true"),
