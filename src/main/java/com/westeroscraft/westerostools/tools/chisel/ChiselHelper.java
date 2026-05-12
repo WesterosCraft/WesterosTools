@@ -64,31 +64,43 @@ class ChiselHelper {
                 if (Math.abs(lz) < 1e-9) return null;
                 double t = (bz - ez) / lz;
                 hx = ex + t*lx;  hy = ey + t*ly;  hz = bz;
+                if (hx < bx || hx > bx + 1) hx = Math.max(bx, Math.min(bx + 1, ex));
+                if (hy < by || hy > by + 1) hy = Math.max(by, Math.min(by + 1, ey));
             }
             case SOUTH -> {
                 if (Math.abs(lz) < 1e-9) return null;
                 double t = (bz + 1 - ez) / lz;
                 hx = ex + t*lx;  hy = ey + t*ly;  hz = bz + 1;
+                if (hx < bx || hx > bx + 1) hx = Math.max(bx, Math.min(bx + 1, ex));
+                if (hy < by || hy > by + 1) hy = Math.max(by, Math.min(by + 1, ey));
             }
             case EAST -> {
                 if (Math.abs(lx) < 1e-9) return null;
                 double t = (bx + 1 - ex) / lx;
                 hx = bx + 1;  hy = ey + t*ly;  hz = ez + t*lz;
+                if (hz < bz || hz > bz + 1) hz = Math.max(bz, Math.min(bz + 1, ez));
+                if (hy < by || hy > by + 1) hy = Math.max(by, Math.min(by + 1, ey));
             }
             case WEST -> {
                 if (Math.abs(lx) < 1e-9) return null;
                 double t = (bx - ex) / lx;
                 hx = bx;  hy = ey + t*ly;  hz = ez + t*lz;
+                if (hz < bz || hz > bz + 1) hz = Math.max(bz, Math.min(bz + 1, ez));
+                if (hy < by || hy > by + 1) hy = Math.max(by, Math.min(by + 1, ey));
             }
             case UP -> {
                 if (Math.abs(ly) < 1e-9) return null;
                 double t = (by + 1 - ey) / ly;
                 hx = ex + t*lx;  hy = by + 1;  hz = ez + t*lz;
+                if (hx < bx || hx > bx + 1) hx = Math.max(bx, Math.min(bx + 1, ex));
+                if (hz < bz || hz > bz + 1) hz = Math.max(bz, Math.min(bz + 1, ez));
             }
             case DOWN -> {
                 if (Math.abs(ly) < 1e-9) return null;
                 double t = (by - ey) / ly;
                 hx = ex + t*lx;  hy = by;  hz = ez + t*lz;
+                if (hx < bx || hx > bx + 1) hx = Math.max(bx, Math.min(bx + 1, ex));
+                if (hz < bz || hz > bz + 1) hz = Math.max(bz, Math.min(bz + 1, ez));
             }
             default -> { return null; }
         }

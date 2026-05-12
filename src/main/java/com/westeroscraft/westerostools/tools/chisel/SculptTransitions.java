@@ -231,25 +231,25 @@ class SculptTransitions {
       // --- side faces (N/S/E/W) ----------------------------------
 
       LIST.addAll(trAllSides(Variant.WALL, List.of(
-         sr(LOW,  LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_left,facing:{dir.face},half:bottom"),
+         sr(LOW,  LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_left,facing:{dir.opp},half:bottom"),
          sr(LOW,  MID,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.SOLID,   ""),
-         sr(LOW,  HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_left,facing:{dir.face},half:top"),
-         sr(MID,  LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.face},half:bottom"),
+         sr(LOW,  HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_left,facing:{dir.opp},half:top"),
+         sr(MID,  LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.opp},half:bottom"),
          sr(MID,  MID,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.SOLID,   ""),
-         sr(MID,  HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.face},half:top"),
-         sr(HIGH, LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_right,facing:{dir.face},half:bottom"),
+         sr(MID,  HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.opp},half:top"),
+         sr(HIGH, LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_right,facing:{dir.opp},half:bottom"),
          sr(HIGH, MID,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.SOLID,   ""),
-         sr(HIGH, HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_right,facing:{dir.face},half:top"),
+         sr(HIGH, HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:inner_right,facing:{dir.opp},half:top"),
          // ---
-         sr(LOW,  LOW,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_left,facing:{dir.face},half:bottom"),
+         sr(LOW,  LOW,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_left,facing:{dir.opp},half:bottom"),
          sr(LOW,  MID,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.SOLID,   ""),
-         sr(LOW,  HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_left,facing:{dir.face},half:top"),
-         sr(MID,  LOW,  "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.face},half:bottom"),
+         sr(LOW,  HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_left,facing:{dir.opp},half:top"),
+         sr(MID,  LOW,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:straight,facing:{dir.opp},half:bottom"),
          sr(MID,  MID,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.WALL,    "{dir.face}:low"),
-         sr(MID,  HIGH, "{dir.face}:!none,{dir.cw}:!none,{dir.ccw}:!none", Variant.STAIRS,  "shape:straight,facing:{dir.face},half:top"),
-         sr(HIGH, LOW,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_right,facing:{dir.face},half:bottom"),
+         sr(MID,  HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:straight,facing:{dir.opp},half:top"),
+         sr(HIGH, LOW,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_right,facing:{dir.opp},half:bottom"),
          sr(HIGH, MID,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.SOLID,   ""),
-         sr(HIGH, HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_right,facing:{dir.face},half:top"),
+         sr(HIGH, HIGH, "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:!none",  Variant.STAIRS,  "shape:inner_right,facing:{dir.opp},half:top"),
          // ---
          sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:!none,{dir.ccw}:none",   Variant.WALL,    "{dir.face}:low"),
          sr(ALL,  ALL,  "{dir.face}:none,{dir.cw}:none,{dir.ccw}:!none",   Variant.WALL,    "{dir.face}:low"),
@@ -301,22 +301,22 @@ class SculptTransitions {
       // --- UP/DOWN faces -----------------------------------------
 
       LIST.addAll(trBothVertical(Variant.FENCE, List.of(
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:true,{dir.opp}:true,{dir.ccw}:true",     Variant.WALL,  "{dir.face}:low,{dir.cw}:low,{dir.opp}:low,{dir.ccw}:low"),
+         sr(ALL,  ALL,  "east:true,south:true,west:true,north:true",     Variant.WALL,  "east:low,south:low,west:low,north:low"),
          // ---
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:true,{dir.opp}:false,{dir.ccw}:true",    Variant.WALL,  "{dir.face}:low,{dir.cw}:low,{dir.opp}:none,{dir.ccw}:low"),
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:false,{dir.opp}:true,{dir.ccw}:true",    Variant.WALL,  "{dir.face}:low,{dir.cw}:none,{dir.opp}:low,{dir.ccw}:low"),
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:true,{dir.opp}:true,{dir.ccw}:false",    Variant.WALL,  "{dir.face}:low,{dir.cw}:low,{dir.opp}:low,{dir.ccw}:none"),
-         sr(ALL,  ALL,  "{dir.face}:false,{dir.cw}:true,{dir.opp}:true,{dir.ccw}:true",    Variant.WALL,  "{dir.face}:none,{dir.cw}:low,{dir.opp}:low,{dir.ccw}:low"),
+         sr(ALL,  ALL,  "east:true,south:true,west:false,north:true",    Variant.WALL,  "east:low,south:low,west:none,north:low"),
+         sr(ALL,  ALL,  "east:true,south:false,west:true,north:true",    Variant.WALL,  "east:low,south:none,west:low,north:low"),
+         sr(ALL,  ALL,  "east:true,south:true,west:true,north:false",    Variant.WALL,  "east:low,south:low,west:low,north:none"),
+         sr(ALL,  ALL,  "east:false,south:true,west:true,north:true",    Variant.WALL,  "east:none,south:low,west:low,north:low"),
          // ---
-         sr(ALL,  ALL,  "{dir.face}:false,{dir.cw}:true,{dir.opp}:false,{dir.ccw}:true",   Variant.WALL,  "{dir.face}:none,{dir.cw}:low,{dir.opp}:none,{dir.ccw}:low"),
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:false,{dir.opp}:true,{dir.ccw}:false",   Variant.WALL,  "{dir.face}:low,{dir.cw}:none,{dir.opp}:low,{dir.ccw}:none"),
+         sr(ALL,  ALL,  "east:false,south:true,west:false,north:true",   Variant.WALL,  "east:none,south:low,west:none,north:low"),
+         sr(ALL,  ALL,  "east:true,south:false,west:true,north:false",   Variant.WALL,  "east:low,south:none,west:low,north:none"),
          // ---
-         sr(ALL,  ALL,  "{dir.face}:true,{dir.cw}:false,{dir.opp}:false,{dir.ccw}:false",  Variant.WALL,  "{dir.face}:low,{dir.cw}:none,{dir.opp}:none,{dir.ccw}:none"),
-         sr(ALL,  ALL,  "{dir.face}:false,{dir.cw}:true,{dir.opp}:false,{dir.ccw}:false",  Variant.WALL,  "{dir.face}:none,{dir.cw}:low,{dir.opp}:none,{dir.ccw}:none"),
-         sr(ALL,  ALL,  "{dir.face}:false,{dir.cw}:false,{dir.opp}:true,{dir.ccw}:false",  Variant.WALL,  "{dir.face}:none,{dir.cw}:none,{dir.opp}:low,{dir.ccw}:none"),
-         sr(ALL,  ALL,  "{dir.face}:false,{dir.cw}:false,{dir.opp}:false,{dir.ccw}:true",  Variant.WALL,  "{dir.face}:none,{dir.cw}:none,{dir.opp}:none,{dir.ccw}:low"),
+         sr(ALL,  ALL,  "east:true,south:false,west:false,north:false",  Variant.WALL,  "east:low,south:none,west:none,north:none"),
+         sr(ALL,  ALL,  "east:false,south:true,west:false,north:false",  Variant.WALL,  "east:none,south:low,west:none,north:none"),
+         sr(ALL,  ALL,  "east:false,south:false,west:true,north:false",  Variant.WALL,  "east:none,south:none,west:low,north:none"),
+         sr(ALL,  ALL,  "east:false,south:false,west:false,north:true",  Variant.WALL,  "east:none,south:none,west:none,north:low"),
          // ---
-         sr(ALL, ALL,   "{dir.face}:false,{dir.cw}:false,{dir.opp}:false,{dir.ccw}:false", Variant.WALL,  "{dir.face}:none,{dir.cw}:none,{dir.opp}:none,{dir.ccw}:none")
+         sr(ALL,  ALL,  "east:false,south:false,west:false,north:false", Variant.WALL,  "east:none,south:none,west:none,north:none")
       )));
 
       // ===================================================================
