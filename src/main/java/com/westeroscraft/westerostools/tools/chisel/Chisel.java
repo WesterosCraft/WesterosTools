@@ -155,8 +155,7 @@ public class Chisel implements DoubleActionBlockTool {
         if (fromVariant == null) fromVariant = wt.inferBlockVariant(block.getBlockType().id());
         if (fromVariant == null) return false;
                                     
-        // TODO: remove debug line
-        player.printInfo(TextComponent.of("(Variant " + fromVariant.toString() + ") Clicked face=" + face.toString() + ", u=" + uBin.toString() + ", v=" + vBin.toString()));
+        // player.printInfo(TextComponent.of("(Variant " + fromVariant.toString() + ") Clicked face=" + face.toString() + ", u=" + uBin.toString() + ", v=" + vBin.toString()));
 
         Map<String,String> fromState = ChiselHelper.stateSnapshot(block);
 
@@ -181,7 +180,8 @@ public class Chisel implements DoubleActionBlockTool {
             return true;
         }
 
-        player.printInfo(TextComponent.of("Could not find transition for fromState=" + fromState.toString()));
+        // player.printInfo(TextComponent.of("Could not find transition for fromState=" + fromState.toString()));
+
         return false;
     }
 
