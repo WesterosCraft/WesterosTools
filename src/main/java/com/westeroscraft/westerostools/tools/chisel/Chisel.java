@@ -32,15 +32,15 @@ import javax.annotation.Nullable;
 /**
  * A tool that "chisels" a block into a related variant based on where the player
  * clicks on the face.  All logic is encoded in the transition tables in
- * {@link ChiselTransitions} and {@link SculptTransitions}:
+ * ChiselTransitions and SculptTransitions:
  *
- *   (face, uBin, vBin, fromVariant, fromStatePattern) → (toVariant, toState)
+ *   (face, uBin, vBin, fromVariant, fromStatePattern) -> (toVariant, toState)
  *
- * NORTH face 3×3 grid (uBin × vBin):
+ * NORTH face 3x3 grid (uBin x vBin):
  *
- *   HIGH │ stair outer_left(W,top) │ stair(N,top)    │ stair outer_right(E,top) │
- *   MID  │ stair(W)                │ wall(E+W)       │ stair(E)                 │
- *   LOW  │ stair outer_right(W)    │ stair(N,bot)    │ stair outer_left(E)      │
+ *   HIGH | stair outer_left(W,top) | stair(N,top)    | stair outer_right(E,top) |
+ *   MID  | stair(W)                | wall(E+W)       | stair(E)                 |
+ *   LOW  | stair outer_right(W)    | stair(N,bot)    | stair outer_left(E)      |
  *          u=LOW(east)               u=MID             u=HIGH(west)
  */
 public class Chisel implements DoubleActionBlockTool {
@@ -62,7 +62,7 @@ public class Chisel implements DoubleActionBlockTool {
 
     /**
      * Apply a matched transition: look up the target block type from the
-     * source block's blockset, then apply the {@code toState} overrides.
+     * source block's blockset, then apply the toState overrides.
      */
     @Nullable
     private BaseBlock applyTransition(World world, BlockVector3 pos,
@@ -165,14 +165,14 @@ public class Chisel implements DoubleActionBlockTool {
         return false;
     }
 
-    /** Primary click — sculpt based on click zone. */
+    /** Primary click - sculpt based on click zone. */
     @Override
     public boolean actPrimary(Platform server, LocalConfiguration config, Player player,
                               LocalSession session, Location clicked, @Nullable Direction face) {
         return handleChisel(SculptTransitions.LIST, player, session, clicked, face);
     }
 
-    /** Secondary click — chisel based on click zone. */
+    /** Secondary click - chisel based on click zone. */
     @Override
     public boolean actSecondary(Platform server, LocalConfiguration config, Player player,
                                 LocalSession session, Location clicked, @Nullable Direction face) {

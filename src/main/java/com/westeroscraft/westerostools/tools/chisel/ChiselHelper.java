@@ -14,17 +14,17 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Static helpers for {@link Chisel}: UV binning, the {@link Transition} record,
+ * Static helpers for Chisel: UV binning, the Transition record,
  * table-builder methods, and lookup utilities.
  *
- * UV axes on each face (U=left→right, V=bottom→top as seen from outside):
+ * UV axes on each face (U=left->right, V=bottom->top as seen from outside):
  *
- *   NORTH  u = 1-(hx-bx)  west←→east,  v = hy-by  bottom↑top
- *   SOUTH  u =   hx-bx    west←→east,  v = hy-by  bottom↑top
- *   EAST   u = 1-(hz-bz)  south←→north,v = hy-by  bottom↑top
- *   WEST   u =   hz-bz    north←→south,v = hy-by  bottom↑top
- *   UP     u =   hx-bx    west←→east,  v = hz-bz  north↑south
- *   DOWN   u =   hx-bx    west←→east,  v = hz-bz  north↑south  (same axes as UP; (LOW,LOW)=NW for both)
+ *   NORTH  u = 1-(hx-bx)  west<->east,  v = hy-by  bottom->top
+ *   SOUTH  u =   hx-bx    west<->east,  v = hy-by  bottom->top
+ *   EAST   u = 1-(hz-bz)  south<->north,v = hy-by  bottom->top
+ *   WEST   u =   hz-bz    north<->south,v = hy-by  bottom->top
+ *   UP     u =   hx-bx    west<->east,  v = hz-bz  north->south
+ *   DOWN   u =   hx-bx    west<->east,  v = hz-bz  north->south  (same axes as UP; (LOW,LOW)=NW for both)
  */
 class ChiselHelper {
 
@@ -41,7 +41,7 @@ class ChiselHelper {
     }
 
     /**
-     * Compute U,V ∈ [0,1] for where the player's eye ray intersects the clicked face.
+     * Compute U,V in [0,1] for where the player's eye ray intersects the clicked face.
      * Returns null if the ray is parallel to the face plane.
      */
     @Nullable
@@ -128,10 +128,10 @@ class ChiselHelper {
     /**
      * One row in a transition table.
      *
-     * {@code fromStatePattern}: partial map of property→value that the current block
-     * must satisfy.  Omitted keys are wildcards.  {@code null} = match any state.
+     * fromStatePattern: partial map of property->value that the current block
+     * must satisfy.  Omitted keys are wildcards.  null = match any state.
      *
-     * {@code toState}: property overrides applied to the target block type's default
+     * toState: property overrides applied to the target block type's default
      * state.  Properties absent from this map keep the block type's default value.
      */
     record Transition(
@@ -188,58 +188,48 @@ class ChiselHelper {
     // -----------------------------------------------------------------------
 
     /**
-     * A single (u, v) → target rule for use with {@link #trFace} / {@link #trAllSides} /
-     * {@link #trBothVertical}.
+     * A single (u, v) -> target rule for use with trFace / trAllSides / trBothVertical.
      *
-     * <p>All direction tokens resolve to <b>lowercase</b> Minecraft property values
-     * (e.g. {@code "north"}, {@code "west"}).
+     * All direction tokens resolve to lowercase Minecraft property values
+     * (e.g. "north", "west").
      *
-     * <p><b>Common tokens</b>
-     * <ul>
-     *   <li>{@code {half}} — {@code "bottom"} for UP, {@code "top"} for DOWN;
-     *       empty for horizontal faces.</li>
-     * </ul>
+     * Common tokens:
+     *   {half}         - "bottom" for UP, "top" for DOWN; empty for horizontal faces.
      *
-     * <p><b>Horizontal-face tokens</b> (N/S/E/W; empty for UP/DOWN)
-     * <ul>
-     *   <li>{@code {dir.face}} — clicked face name (e.g. {@code "north"}).</li>
-     *   <li>{@code {dir.opp}}  — opposite direction name (e.g. {@code "south"}).</li>
-     *   <li>{@code {dir.cw}}   — face direction rotated 90° CW  (N→E→S→W→N).</li>
-     *   <li>{@code {dir.ccw}}  — face direction rotated 90° CCW (N→W→S→E→N).</li>
-     * </ul>
+     * Horizontal-face tokens (N/S/E/W; empty for UP/DOWN):
+     *   {dir.face}     - clicked face name (e.g. "north").
+     *   {dir.opp}      - opposite direction name (e.g. "south").
+     *   {dir.cw}       - face direction rotated 90 deg CW  (N->E->S->W->N).
+     *   {dir.ccw}      - face direction rotated 90 deg CCW (N->W->S->E->N).
      *
-     * <p>Example declarative wall template:
-     * <pre>
+     * Example declarative wall template:
      *   "{dir.face}:low,{dir.opp}:none,{dir.cw}:low,{dir.ccw}:low,up:false"
-     * </pre>
      *
-     * <p><b>UP/DOWN face tokens</b> (empty for horizontal faces)
-     * <ul>
-     *   <li>{@code {dir.v}}     — direction the v-bin edge faces <em>away</em> from:
-     *       UP  v=LOW→{@code south}, v=HIGH→{@code north};
-     *       DOWN v=LOW→{@code north}, v=HIGH→{@code south}.</li>
-     *   <li>{@code {dir.v+90}}  — {@code {dir.v}} rotated 90° CW.</li>
-     *   <li>{@code {dir.v-90}}  — {@code {dir.v}} rotated 90° CCW.</li>
-     *   <li>{@code {dir.v+180}} — {@code {dir.v}} rotated 180°.</li>
-     *   <li>{@code {dir.u}}       — direction the u-bin edge faces away from:
-     *       u=LOW→{@code east}, u=HIGH→{@code west}.
-     *       Matches a stair whose open side is at this u-edge (e.g. an east-facing stair
-     *       at u=LOW, because its open/ascending side faces east).</li>
-     *   <li>{@code {dir.u+90}}  — {@code {dir.u}} rotated 90° CW.</li>
-     *   <li>{@code {dir.u-90}}  — {@code {dir.u}} rotated 90° CCW.</li>
-     *   <li>{@code {dir.u+180}} — opposite of {@code {dir.u}}: the direction the u-bin edge
-     *       faces <em>into</em> (u=LOW→{@code west}, u=HIGH→{@code east}).
-     *       Matches a stair whose riser is at this u-edge (e.g. a west-facing stair at
-     *       u=LOW, because its riser/closed side is on the west).</li>
-     *   <li>{@code {corner.inner}} — {@code "inner_right"} when {@code rotateH({dir.v}, +90°) == {dir.u}},
-     *       otherwise {@code "inner_left"}.  Use with {@code facing:{dir.v}}.
-     *       Only valid when both u and v are non-MID (i.e. a corner cell).</li>
-     *   <li>{@code {corner.outer}} — {@code "outer_right"} / {@code "outer_left"} by the same
-     *       condition.  Use with {@code facing:{dir.v+180}} (facing points toward the filled corner,
-     *       opposite to the inner case).  Only valid for corner cells.</li>
-     * </ul>
+     * UP/DOWN face tokens (empty for horizontal faces):
+     *   {dir.v}        - direction the v-bin edge faces away from:
+     *                    UP  v=LOW->"south", v=HIGH->"north";
+     *                    DOWN v=LOW->"north", v=HIGH->"south".
+     *   {dir.v+90}     - {dir.v} rotated 90 deg CW.
+     *   {dir.v-90}     - {dir.v} rotated 90 deg CCW.
+     *   {dir.v+180}    - {dir.v} rotated 180 deg.
+     *   {dir.u}        - direction the u-bin edge faces away from:
+     *                    u=LOW->"east", u=HIGH->"west".
+     *                    Matches a stair whose open side is at this u-edge (e.g. an east-facing
+     *                    stair at u=LOW, because its open/ascending side faces east).
+     *   {dir.u+90}     - {dir.u} rotated 90 deg CW.
+     *   {dir.u-90}     - {dir.u} rotated 90 deg CCW.
+     *   {dir.u+180}    - opposite of {dir.u}: the direction the u-bin edge faces into
+     *                    (u=LOW->"west", u=HIGH->"east").
+     *                    Matches a stair whose riser is at this u-edge (e.g. a west-facing stair
+     *                    at u=LOW, because its riser/closed side is on the west).
+     *   {corner.inner} - "inner_right" when rotateH({dir.v}, +90) == {dir.u},
+     *                    otherwise "inner_left".  Use with facing:{dir.v}.
+     *                    Only valid when both u and v are non-MID (i.e. a corner cell).
+     *   {corner.outer} - "outer_right" / "outer_left" by the same condition.
+     *                    Use with facing:{dir.v+180} (facing points toward the filled corner,
+     *                    opposite to the inner case).  Only valid for corner cells.
      *
-     * <p>The same tokens are substituted into {@code fromPatTemplate} when non-null.
+     * The same tokens are substituted into fromPatTemplate when non-null.
      */
     record SideRule(
         UVBin u,
@@ -249,11 +239,11 @@ class ChiselHelper {
         String toStateTemplate
     ) {}
 
-    /** {@link SideRule} factory with no source-state filter. */
+    /** SideRule factory with no source-state filter. */
     static SideRule sr(UVBin u, UVBin v, Variant to, String toTemplate) {
         return new SideRule(u, v, null, to, toTemplate);
     }
-    /** {@link SideRule} factory with a source-state filter template. */
+    /** SideRule factory with a source-state filter template. */
     static SideRule sr(UVBin u, UVBin v, String fromTemplate, Variant to, String toTemplate) {
         return new SideRule(u, v, fromTemplate, to, toTemplate);
     }
@@ -272,8 +262,8 @@ class ChiselHelper {
     }
 
     /**
-     * Generate transitions for {@code face} by applying each rule's templates.
-     * See {@link SideRule} for the full list of substitution tokens.
+     * Generate transitions for face by applying each rule's templates.
+     * See SideRule for the full list of substitution tokens.
      */
     static List<Transition> trFace(Direction face, Variant from, List<SideRule> rules) {
         String half = switch (face) { case UP -> "bottom"; case DOWN -> "top"; default -> ""; };
@@ -305,7 +295,7 @@ class ChiselHelper {
     private static final List<String> H_CW = List.of("NORTH", "EAST", "SOUTH", "WEST");
 
     /**
-     * Rotate a horizontal direction name {@code steps} × 90° clockwise (case-insensitive input,
+     * Rotate a horizontal direction name steps x 90 deg clockwise (case-insensitive input,
      * lowercase output).  Returns the input unchanged for UP/DOWN/empty.
      */
     private static String rotateH(String dir, int steps) {
@@ -366,11 +356,11 @@ class ChiselHelper {
     }
 
     /**
-     * For each {@link SideRule} whose v-bin is not {@link UVBin#MID}, produce two rules:
-     * one with {@code half:bottom} at the original v-position, and one with {@code half:top}
+     * For each SideRule whose v-bin is not UVBin.MID, produce two rules:
+     * one with half:bottom at the original v-position, and one with half:top
      * at the vertically-mirrored v-position.
      *
-     * <p>A {@code half:top} stair has its geometry flipped relative to a {@code half:bottom}
+     * A half:top stair has its geometry flipped relative to a half:bottom
      * stair, so the same UV click position corresponds to a geometrically different region.
      * MID-v rules are symmetric and pass through unchanged.
      */
@@ -402,7 +392,7 @@ class ChiselHelper {
 
     /**
      * Generate transitions for all four horizontal faces (N, S, E, W).
-     * Delegates to {@link #trFace} for each.
+     * Delegates to trFace for each.
      */
     static List<Transition> trAllSides(Variant from, List<SideRule> rules) {
         List<Transition> out = new ArrayList<>();
@@ -415,10 +405,10 @@ class ChiselHelper {
     /**
      * Generate transitions for both UP and DOWN faces from a single rule set.
      *
-     * <p>Both faces share the same UV axes: u=LOW→west, u=HIGH→east, v=LOW→north, v=HIGH→south,
-     * so (LOW,LOW) is the northwest corner for both.  Rules written with {@code {dir.v}},
-     * {@code {dir.u}}, and {@code {corner.inner}} resolve identically for UP and DOWN.
-     * Only {@code {half}} differs ({@code "bottom"} for UP, {@code "top"} for DOWN).
+     * Both faces share the same UV axes: u=LOW->west, u=HIGH->east, v=LOW->north, v=HIGH->south,
+     * so (LOW,LOW) is the northwest corner for both.  Rules written with {dir.v},
+     * {dir.u}, and {corner.inner} resolve identically for UP and DOWN.
+     * Only {half} differs ("bottom" for UP, "top" for DOWN).
      */
     static List<Transition> trBothVertical(Variant from, List<SideRule> rules) {
         List<Transition> out = new ArrayList<>();
@@ -429,7 +419,7 @@ class ChiselHelper {
 
     /**
      * Generate transitions for all six faces (N, S, E, W, UP, DOWN).
-     * Delegates to {@link #trAllSides} and {@link #trBothVertical}.
+     * Delegates to trAllSides and trBothVertical.
      */
     static List<Transition> trAllFaces(Variant from, List<SideRule> rules) {
         List<Transition> out = new ArrayList<>();
