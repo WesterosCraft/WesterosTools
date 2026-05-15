@@ -115,6 +115,25 @@ public class Chisel implements DoubleActionBlockTool {
     }
 
     // -----------------------------------------------------------------------
+    // Invisible wall guard
+    // -----------------------------------------------------------------------
+
+    private static final List<String> WALL_DIRS = List.of("north", "south", "east", "west");
+
+    private boolean isInvisibleWall(BaseBlock block) {
+        for (String dir : WALL_DIRS) {
+            Property<?> prop = block.getStates().keySet().stream()
+                .filter(p -> p.getName().equals(dir)).findFirst().orElse(null);
+            if (prop == null) return false;
+            if (!"none".equals(String.valueOf(block.getState(prop)))) return false;
+        }
+        Property<?> upProp = block.getStates().keySet().stream()
+            .filter(p -> p.getName().equals("up")).findFirst().orElse(null);
+        if (upProp == null) return false;
+        return Boolean.FALSE.equals(block.getState(upProp));
+    }
+
+    // -----------------------------------------------------------------------
     // DoubleActionBlockTool entry points
     // -----------------------------------------------------------------------
 
@@ -146,6 +165,7 @@ public class Chisel implements DoubleActionBlockTool {
 
             BaseBlock newBlock = applyTransition(world, pos, block, tx);
             if (newBlock == null) continue;  // variant not in this block's set; try next match
+            if (isInvisibleWall(newBlock)) continue;
 
             try (EditSession editSession = session.createEditSession(player)) {
                 editSession.disableBuffering();

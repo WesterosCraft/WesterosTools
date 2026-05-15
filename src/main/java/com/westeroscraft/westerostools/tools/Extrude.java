@@ -40,6 +40,21 @@ public class Extrude implements DoubleActionBlockTool {
 
     private final Predicate<Property<?>> isUnconnect = p -> p.getName().equals("unconnect");
 
+    private static final List<String> WALL_DIRS = List.of("north", "south", "east", "west");
+
+    private boolean isInvisibleWall(BaseBlock block) {
+        for (String dir : WALL_DIRS) {
+            Property<?> prop = block.getStates().keySet().stream()
+                .filter(p -> p.getName().equals(dir)).findFirst().orElse(null);
+            if (prop == null) return false;
+            if (!"none".equals(String.valueOf(block.getState(prop)))) return false;
+        }
+        Property<?> upProp = block.getStates().keySet().stream()
+            .filter(p -> p.getName().equals("up")).findFirst().orElse(null);
+        if (upProp == null) return false;
+        return Boolean.FALSE.equals(block.getState(upProp));
+    }
+
     private boolean handleExtrude(LocalConfiguration config, Player player, LocalSession session,
                                   Location clicked, Direction faceF, boolean forward) {
 
@@ -105,6 +120,8 @@ public class Extrude implements DoubleActionBlockTool {
 						player.printError(TextComponent.of("Block face cannot be extruded"));
 						return true;
 				}
+
+        if (isInvisibleWall(newBlock)) return true;
 
         // Attempt to apply change
         try (EditSession editSession = session.createEditSession(player)) {
