@@ -59,6 +59,7 @@ public class WesterosTools implements ModInitializer {
 
 	public static ModContainer we;
 	public static WorldEdit worldEdit;
+	public static MinecraftServer server;
 
 	public BlockSetConfig config;
 	public HashMap<String, HashMap<Variant, String>> blockMap = new HashMap<String, HashMap<Variant, String>>();
@@ -105,6 +106,7 @@ public class WesterosTools implements ModInitializer {
 	 * 4. Try to load the block set config and create the block map
 	 */
 	private void onServerStarting(MinecraftServer server) {
+    WesterosTools.server = server;
     Optional<ModContainer> ourMod = FabricLoader.getInstance().getModContainer(MOD_ID);
     ourMod.ifPresent(mod ->
         LOGGER.info("WesterosTools v" + mod.getMetadata().getVersion().getFriendlyString() + " loaded")

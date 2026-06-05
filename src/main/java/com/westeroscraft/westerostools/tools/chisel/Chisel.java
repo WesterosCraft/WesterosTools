@@ -139,14 +139,26 @@ public class Chisel implements DoubleActionBlockTool {
 
     private boolean handleChisel(List<Transition> table, Player player, LocalSession session,
                                   Location clicked, @Nullable Direction face) {
-        if (face == null) return false;
-
         World world = (World) clicked.getExtent();
-        BlockVector3 pos = clicked.toVector().toBlockPoint();
-        BaseBlock block = world.getFullBlock(pos);
 
-        double[] uv = ChiselHelper.computeFaceUV(player, pos, face);
+        // Prefer the real model intersection (handles stairs/walls/slabs where the
+        // clicked surface differs from the 1x1x1 grid face).  Fall back to the
+        // eye-ray vs full-block-face computation if the raycast is unavailable.
+        BlockVector3 pos;
+        double[] uv;
+        ChiselHelper.HitInfo hit = ChiselHelper.raycastModel(player);
+        if (hit != null) {
+            pos = hit.pos();
+            face = hit.face();
+            uv = hit.uv();
+        } else {
+            if (face == null) return false;
+            pos = clicked.toVector().toBlockPoint();
+            uv = ChiselHelper.computeFaceUV(player, pos, face);
+        }
         if (uv == null) return false;
+
+        BaseBlock block = world.getFullBlock(pos);
 
         UVBin uBin = ChiselHelper.binCoord(uv[0]);
         UVBin vBin = ChiselHelper.binCoord(uv[1]);

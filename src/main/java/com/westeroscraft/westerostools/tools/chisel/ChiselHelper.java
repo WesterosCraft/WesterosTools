@@ -1,11 +1,19 @@
 package com.westeroscraft.westerostools.tools.chisel;
 
 import com.sk89q.worldedit.entity.Player;
+import com.sk89q.worldedit.fabric.FabricAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.util.Direction;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.westeroscraft.westerostools.BlockDef.Variant;
+import com.westeroscraft.westerostools.WesterosTools;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,6 +124,66 @@ class ChiselHelper {
             default    -> { return null; }
         }
 
+        u = Math.max(0.0, Math.min(1.0, u));
+        v = Math.max(0.0, Math.min(1.0, v));
+        return new double[]{ u, v };
+    }
+
+    /**
+     * Result of a precise model raycast: the clicked block position, the actual
+     * face of the model sub-shape that was hit, and the UV on that face.
+     */
+    record HitInfo(BlockVector3 pos, Direction face, double[] uv) {}
+
+    /**
+     * Raycast against the block's real visual outline shape (the same shape used
+     * for the player's crosshair target), giving the exact model intersection
+     * rather than the 1x1x1 grid face plane.
+     *
+     * For non-full blocks (upper-half stairs, walls, slabs, ...) this returns the
+     * face and UV of the actual model surface clicked, which can differ from where
+     * the eye ray meets the full-block boundary.
+     *
+     * Returns null if the player is not a Fabric player or the crosshair is not on
+     * a block (caller should fall back to computeFaceUV).
+     */
+    @Nullable
+    static HitInfo raycastModel(Player player) {
+        if (WesterosTools.server == null) return null;
+        ServerPlayer sp = WesterosTools.server.getPlayerList().getPlayer(player.getUniqueId());
+        if (sp == null) return null;
+
+        // pick() uses ClipContext.Block.OUTLINE -> the visual model shape.
+        HitResult hit = sp.pick(sp.blockInteractionRange(), 1.0f, false);
+        if (!(hit instanceof BlockHitResult bhr) || bhr.getType() != HitResult.Type.BLOCK) return null;
+
+        BlockPos bp = bhr.getBlockPos();
+        Vec3 p = bhr.getLocation();
+        Direction face = FabricAdapter.adaptEnumFacing(bhr.getDirection());
+
+        double[] uv = localToUV(face, p.x - bp.getX(), p.y - bp.getY(), p.z - bp.getZ());
+        if (uv == null) return null;
+        return new HitInfo(FabricAdapter.adapt(bp), face, uv);
+    }
+
+    /**
+     * Map a hit point expressed in block-local coordinates (each component the
+     * offset from the block's min corner) to UV on the given face.  The axis
+     * conventions match computeFaceUV; the component normal to the face
+     * is ignored, so a recessed sub-face still yields the correct in-face UV.
+     */
+    @Nullable
+    static double[] localToUV(Direction face, double lx, double ly, double lz) {
+        double u, v;
+        switch (face) {
+            case NORTH -> { u = 1.0 - lx; v = ly; }
+            case SOUTH -> { u = lx;        v = ly; }
+            case EAST  -> { u = 1.0 - lz; v = ly; }
+            case WEST  -> { u = lz;        v = ly; }
+            case UP    -> { u = lx;        v = lz; }
+            case DOWN  -> { u = lx;        v = lz; }
+            default    -> { return null; }
+        }
         u = Math.max(0.0, Math.min(1.0, u));
         v = Math.max(0.0, Math.min(1.0, v));
         return new double[]{ u, v };
