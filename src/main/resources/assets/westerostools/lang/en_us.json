@@ -1,0 +1,24 @@
+{
+	"itemGroup.westerostools": "WesterosTools",
+
+	"item.westerostools.cycler": "Cycler Tool",
+	"item.westerostools.extrude": "Extrude Tool",
+	"item.westerostools.paint": "Paint Brush Tool",
+	"item.westerostools.chisel": "Chisel Tool",
+
+	"tooltip.westerostools.cycler.desc": "Cycles a block's state values.",
+	"tooltip.westerostools.cycler.primary": "Right-click: cycle the selected property",
+	"tooltip.westerostools.cycler.secondary": "Left-click: switch to the next property",
+
+	"tooltip.westerostools.extrude.desc": "Extrudes directional blocks (walls, stairs).",
+	"tooltip.westerostools.extrude.primary": "Right-click: extrude toward the face you're looking at",
+	"tooltip.westerostools.extrude.secondary": "Left-click: extrude the opposite direction",
+
+	"tooltip.westerostools.paint.desc": "Repaints blocks using a block set, keeping their shape.",
+	"tooltip.westerostools.paint.primary": "Right-click: paint with the selected set",
+	"tooltip.westerostools.paint.secondary": "Left-click: pick the set from the clicked block",
+
+	"tooltip.westerostools.chisel.desc": "Reshapes a block based on where you click its face.",
+	"tooltip.westerostools.chisel.primary": "Right-click: sculpt at the click point",
+	"tooltip.westerostools.chisel.secondary": "Left-click: chisel at the click point"
+}

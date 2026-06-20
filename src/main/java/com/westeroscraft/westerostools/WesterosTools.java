@@ -30,6 +30,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
@@ -37,6 +39,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.extension.platform.Actor;
@@ -44,6 +47,9 @@ import com.sk89q.worldedit.fabric.FabricAdapter;
 
 import com.westeroscraft.westerostools.BlockDef.Variant;
 import com.westeroscraft.westerostools.commands.WCTOOLCommand;
+import com.westeroscraft.westerostools.item.ModItems;
+import com.westeroscraft.westerostools.item.ModItemGroups;
+import com.westeroscraft.westerostools.item.ToolItem;
 
 public class WesterosTools implements ModInitializer {
 	public static final String MOD_ID = "westerostools";
@@ -90,6 +96,29 @@ public class WesterosTools implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 				WCTOOLCommand.register(this, dispatcher);
 		});
+
+		ModItems.initialize(this);
+		ModItemGroups.initialize();
+
+		// Left-click (attack) on a block with a tool item -> tool secondary action.
+		// Right-click is handled by ToolItem.useOn. Tool items never mine, so cancel
+		// the break on BOTH sides: cancelling only server-side would let the client
+		// predict a break (instant in creative) that the server rejects, leaving a
+		// ghost block for actions that don't edit the clicked block. The secondary
+		// action only runs server-side.
+		AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+				if (!(player.getItemInHand(hand).getItem() instanceof ToolItem tool)) {
+						return InteractionResult.PASS;
+				}
+				if (!world.isClientSide && player instanceof ServerPlayer sp) {
+						tool.runSecondary(sp, pos, direction);
+				}
+				return InteractionResult.SUCCESS;
+		});
+
+		// Release a player's per-player Paint tool when they disconnect.
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+				ModItems.release(handler.player.getUUID()));
 
 		// Server starting/stopping hooks
     ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
