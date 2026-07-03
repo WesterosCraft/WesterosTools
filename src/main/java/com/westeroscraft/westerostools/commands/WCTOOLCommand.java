@@ -14,6 +14,8 @@ import com.sk89q.worldedit.blocks.BaseItemStack;
 
 import com.westeroscraft.westerostools.WesterosTools;
 import com.westeroscraft.westerostools.WorldEditBridge;
+import com.westeroscraft.westerostools.item.ModItems;
+import com.westeroscraft.westerostools.item.ToolItem;
 import com.westeroscraft.westerostools.tools.BlockDataCycler;
 import com.westeroscraft.westerostools.tools.Extrude;
 import com.westeroscraft.westerostools.tools.Paint;
@@ -25,6 +27,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.server.level.ServerPlayer;
 
 
 public class WCTOOLCommand {
@@ -56,17 +59,31 @@ public class WCTOOLCommand {
         .executes(ctx -> paint(null, 1.0, ctx.getSource()))));
 	}
 
+  /**
+   * True if the source is holding one of the dedicated tool items. Those
+   * dispatch tool actions on their own, so binding a WorldEdit tool to them
+   * would run both paths on every click.
+   */
+  private static boolean holdingToolItem(CommandSourceStack source) {
+    return source.getEntity() instanceof ServerPlayer sp
+        && sp.getMainHandItem().getItem() instanceof ToolItem;
+  }
+
   /*
    * Data cycler tool that automatically sets unconnect=true
    */
   public static int cycler(CommandSourceStack source) {
     Actor actor = WorldEditBridge.validateActor(source, "westerostools.data-cycler");
     if (actor != null) {
+      Player player = (Player) actor;
+      if (holdingToolItem(source)) {
+        player.printError(TextComponent.of("This item is already a Westeroscraft tool and cannot be bound over."));
+        return 1;
+      }
       LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       BlockDataCycler tool = new BlockDataCycler();
-      Player player = (Player) actor;
 
       // Bind tool to item
       try {
@@ -88,11 +105,15 @@ public class WCTOOLCommand {
   public static int chisel(CommandSourceStack source) {
     Actor actor = WorldEditBridge.validateActor(source, "westerostools.chisel");
     if (actor != null) {
+      Player player = (Player) actor;
+      if (holdingToolItem(source)) {
+        player.printError(TextComponent.of("This item is already a Westeroscraft tool and cannot be bound over."));
+        return 1;
+      }
       LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Chisel tool = new Chisel(wt);
-      Player player = (Player) actor;
 
       // Bind tool to item
       try {
@@ -114,11 +135,15 @@ public class WCTOOLCommand {
   public static int extrude(CommandSourceStack source) {
     Actor actor = WorldEditBridge.validateActor(source, "westerostools.extrude");
     if (actor != null) {
+      Player player = (Player) actor;
+      if (holdingToolItem(source)) {
+        player.printError(TextComponent.of("This item is already a Westeroscraft tool and cannot be bound over."));
+        return 1;
+      }
       LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Extrude tool = new Extrude();
-      Player player = (Player) actor;
 
       // Bind tool to item
       try {
@@ -140,21 +165,34 @@ public class WCTOOLCommand {
   public static int paint(String arg, double radius, CommandSourceStack source) {
     Actor actor = WorldEditBridge.validateActor(source, "westerostools.paint");
     if (actor != null) {
+      Player player = (Player) actor;
+      if (arg != null && !wt.hasBlockSet(arg)) {
+        player.printError(TextComponent.of("Block set does not exist"));
+        player.printDebug(TextComponent.of("Tip: use '/tool repl <id>' or '/tool repl ^<id>' for individual blocks"));
+        return 1;
+      }
+
+      // Holding the dedicated paint tool item: configure its per-player Paint
+      // instance instead of binding a WorldEdit tool to the item type. A null
+      // set only changes the radius, keeping the current selection.
+      if (holdingToolItem(source)) {
+        ServerPlayer sp = (ServerPlayer) source.getEntity();
+        if (sp.getMainHandItem().getItem() == ModItems.PAINT && ToolItem.configurePaint(sp, arg, radius)) {
+          player.printInfo(TextComponent.of("Westeroscraft paint tool configured"
+              + (arg != null ? " with set '" + arg + "'" : "") + " (radius " + radius + ")."));
+        } else {
+          player.printError(TextComponent.of("This item is already a Westeroscraft tool and cannot be bound over."));
+        }
+        return 1;
+      }
+
       LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Paint tool = new Paint(wt);
       tool.setRadius(radius);
-      Player player = (Player) actor;
       if (arg != null) {
-        if (wt.hasBlockSet(arg)) {
-          tool.updateSet(player, arg);
-        }
-        else {
-          player.printError(TextComponent.of("Block set does not exist"));
-          player.printDebug(TextComponent.of("Tip: use '/tool repl <id>' or '/tool repl ^<id>' for individual blocks"));
-          return 1;
-        }
+        tool.updateSet(player, arg);
       }
 
       // Bind tool to item

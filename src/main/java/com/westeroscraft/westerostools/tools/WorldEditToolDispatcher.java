@@ -14,6 +14,7 @@ import com.sk89q.worldedit.extension.platform.Capability;
 import com.sk89q.worldedit.extension.platform.Platform;
 import com.sk89q.worldedit.fabric.FabricAdapter;
 import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldedit.util.formatting.text.TextComponent;
 
 import com.westeroscraft.westerostools.WesterosTools;
 import com.westeroscraft.westerostools.WorldEditBridge;
@@ -62,6 +63,16 @@ public class WorldEditToolDispatcher implements ToolDispatcher {
     }
 
     @Override
+    public boolean configurePaint(ServerPlayer sp, @Nullable String set, double radius) {
+        Paint paint = paintFor(sp.getUUID());
+        paint.setRadius(radius);
+        if (set != null) {
+            paint.updateSet(FabricAdapter.adaptPlayer(sp), set);
+        }
+        return true;
+    }
+
+    @Override
     public void release(UUID id) {
         paintTools.remove(id);
     }
@@ -75,6 +86,7 @@ public class WorldEditToolDispatcher implements ToolDispatcher {
         Player player = FabricAdapter.adaptPlayer(sp);
         DoubleActionBlockTool tool = toolFor(type, sp.getUUID());
         if (!tool.canUse(player)) {
+            player.printError(TextComponent.of("You do not have access to this tool"));
             return false;
         }
 

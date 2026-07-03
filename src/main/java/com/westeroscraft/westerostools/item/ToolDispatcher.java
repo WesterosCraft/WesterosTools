@@ -25,6 +25,15 @@ public interface ToolDispatcher {
      */
     boolean dispatch(ServerPlayer player, BlockPos pos, @Nullable Direction face, boolean primary, ToolType type);
 
+    /**
+     * Configure the player's per-player Paint tool: always applies the radius,
+     * and selects the given block set when non-null (a null set leaves the
+     * current selection untouched). The set name must already be validated.
+     *
+     * @return true if the configuration was applied
+     */
+    boolean configurePaint(ServerPlayer player, @Nullable String set, double radius);
+
     /** Release any per-player state held for the given player (e.g. on disconnect). */
     void release(UUID id);
 }

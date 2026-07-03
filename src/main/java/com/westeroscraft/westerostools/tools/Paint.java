@@ -189,6 +189,7 @@ public class Paint implements DoubleActionBlockTool {
                     // Radius mode — only paint blocks explicitly in the blockset mapping
                     int r = (int) Math.ceil(radius);
                     double r2 = radius * radius;
+                    int painted = 0;
                     for (int dx = -r; dx <= r; dx++) {
                         for (int dy = -r; dy <= r; dy++) {
                             for (int dz = -r; dz <= r; dz++) {
@@ -197,10 +198,15 @@ public class Paint implements DoubleActionBlockTool {
                                     BaseBlock newBlock = computePaintedBlock(world, pt, true);
                                     if (newBlock != null) {
                                         editSession.setBlock(pt, newBlock);
+                                        painted++;
                                     }
                                 }
                             }
                         }
+                    }
+                    if (painted == 0) {
+                        player.printError(TextComponent.of("No paintable blocks within radius " + radius
+                            + " (radius mode only paints blocks recognized as block set variants)"));
                     }
                 }
             } catch (MaxChangedBlocksException e) {
