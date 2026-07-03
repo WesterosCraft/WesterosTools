@@ -35,15 +35,9 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
-
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.fabric.FabricAdapter;
 
 import com.westeroscraft.westerostools.BlockDef.Variant;
 import com.westeroscraft.westerostools.commands.WCTOOLCommand;
@@ -63,8 +57,6 @@ public class WesterosTools implements ModInitializer {
 	public static String blockSetConfigFilename;
 	public static String customStatesConfigFilename;
 
-	public static ModContainer we;
-	public static WorldEdit worldEdit;
 	public static MinecraftServer server;
 
 	public BlockSetConfig config;
@@ -92,12 +84,16 @@ public class WesterosTools implements ModInitializer {
 		blockSetConfigFilename = modConfigDir.resolve(BLOCK_SET_CONFIG).toString();
 		customStatesConfigFilename = modConfigDir.resolve(CUSTOM_STATES_CONFIG).toString();
 
-		// Register commands
+		// Register commands only when WorldEdit is present. This also keeps the
+		// WorldEdit-referencing WCTOOLCommand class from loading on a client (or a
+		// singleplayer world) that ships without WorldEdit.
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-				WCTOOLCommand.register(this, dispatcher);
+				if (FabricLoader.getInstance().getModContainer("worldedit").isPresent()) {
+						WCTOOLCommand.register(this, dispatcher);
+				}
 		});
 
-		ModItems.initialize(this);
+		ModItems.initialize();
 		ModItemGroups.initialize();
 
 		// Left-click (attack) on a block with a tool item -> tool secondary action.
@@ -118,7 +114,7 @@ public class WesterosTools implements ModInitializer {
 
 		// Release a player's per-player Paint tool when they disconnect.
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-				ModItems.release(handler.player.getUUID()));
+				ToolItem.release(handler.player.getUUID()));
 
 		// Server starting/stopping hooks
     ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStarting);
@@ -146,7 +142,9 @@ public class WesterosTools implements ModInitializer {
         LOGGER.error("WorldEdit not found!!");
         return;
     }
-    worldEdit = WorldEdit.getInstance();
+    // Resolve the WorldEdit singleton and install the server-side tool dispatcher.
+    // Isolated in WorldEditBridge so WorldEdit classes never link on the client.
+    WorldEditBridge.init(this);
     LOGGER.info("Found WorldEdit " + worldedit.get().getMetadata().getVersion().getFriendlyString());
 
 		// Initialize block sets
@@ -358,26 +356,6 @@ public class WesterosTools implements ModInitializer {
 	public String getCustomStates(String setname, String id) {
 		if (!isInCustomStatesMap(setname, id)) return null;
 		return customStatesMap.get(setname).get(id);
-	}
-
-	/* 
-	 * Validate that actor is server player and has permissions; otherwise return null.
-	 */
-	public static Actor validateActor(CommandSourceStack source, String permissionGroup) {
-		if (source.getEntity() instanceof ServerPlayer player) {
-			Actor actor = FabricAdapter.adaptPlayer(player);
-
-			// Test for command access
-			if (permissionGroup != null && !actor.hasPermission(permissionGroup)) {
-				source.sendFailure(Component.literal("You do not have access to this command"));
-				return null;
-			}
-
-			return actor;
-		}
-
-		source.sendFailure(Component.literal("Only usable by server player"));
-		return null;
 	}
 
 	public static void crash(Exception x, String msg) {

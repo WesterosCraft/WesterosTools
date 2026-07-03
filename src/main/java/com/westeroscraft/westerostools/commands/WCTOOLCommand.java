@@ -13,6 +13,7 @@ import com.sk89q.worldedit.command.tool.InvalidToolBindException;
 import com.sk89q.worldedit.blocks.BaseItemStack;
 
 import com.westeroscraft.westerostools.WesterosTools;
+import com.westeroscraft.westerostools.WorldEditBridge;
 import com.westeroscraft.westerostools.tools.BlockDataCycler;
 import com.westeroscraft.westerostools.tools.Extrude;
 import com.westeroscraft.westerostools.tools.Paint;
@@ -59,9 +60,9 @@ public class WCTOOLCommand {
    * Data cycler tool that automatically sets unconnect=true
    */
   public static int cycler(CommandSourceStack source) {
-    Actor actor = wt.validateActor(source, "westerostools.data-cycler");
+    Actor actor = WorldEditBridge.validateActor(source, "westerostools.data-cycler");
     if (actor != null) {
-      LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+      LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       BlockDataCycler tool = new BlockDataCycler();
@@ -85,9 +86,9 @@ public class WCTOOLCommand {
    * Tool that chisels a block into a related variant based on where the player clicks on the face.
    */
   public static int chisel(CommandSourceStack source) {
-    Actor actor = wt.validateActor(source, "westerostools.chisel");
+    Actor actor = WorldEditBridge.validateActor(source, "westerostools.chisel");
     if (actor != null) {
-      LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+      LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Chisel tool = new Chisel(wt);
@@ -111,9 +112,9 @@ public class WCTOOLCommand {
    * Tool that can extrude blocks with directional blockstates in the direction the player is facing
    */
   public static int extrude(CommandSourceStack source) {
-    Actor actor = wt.validateActor(source, "westerostools.extrude");
+    Actor actor = WorldEditBridge.validateActor(source, "westerostools.extrude");
     if (actor != null) {
-      LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+      LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Extrude tool = new Extrude();
@@ -137,9 +138,9 @@ public class WCTOOLCommand {
    * Tool that can paint blocks with a given block set
    */
   public static int paint(String arg, double radius, CommandSourceStack source) {
-    Actor actor = wt.validateActor(source, "westerostools.paint");
+    Actor actor = WorldEditBridge.validateActor(source, "westerostools.paint");
     if (actor != null) {
-      LocalSession session = wt.worldEdit.getSessionManager().get(actor);
+      LocalSession session = WorldEditBridge.worldEdit.getSessionManager().get(actor);
 
       // Initialize tool
       Paint tool = new Paint(wt);
