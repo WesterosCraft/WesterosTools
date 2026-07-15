@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"main": [
 			"com.westeroscraft.westerostools.WesterosTools"
+		],
+		"client": [
+			"com.westeroscraft.westerostools.client.WesterosToolsClient"
 		]
 	},
 	"depends": {

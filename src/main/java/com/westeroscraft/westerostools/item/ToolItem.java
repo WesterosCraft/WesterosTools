@@ -37,14 +37,15 @@ public class ToolItem extends Item {
     private static volatile ToolDispatcher dispatcher;
 
     /**
-     * Last game tick each player triggered a secondary action. Cancelling the
-     * attack client-side skips vanilla's block-destroy state and its attack
-     * cooldown, so the client re-sends the attack every tick the button is
-     * held — even a quick click arrives as several events. Matches vanilla
-     * creative's 5-tick destroy delay, so holding repeats at the same cadence.
+     * Last game tick each player sent a secondary action, updated on every
+     * event (fired or suppressed). Up-to-date clients gate on the physical
+     * press ({@link ClientClickTracker}) and send exactly one attack per
+     * click; outdated clients still re-send every tick the button is held,
+     * so consecutive events within the echo window are collapsed into the
+     * click that started them instead of repeating on a cadence.
      */
     private static final Map<UUID, Long> lastSecondaryTick = new ConcurrentHashMap<>();
-    private static final int SECONDARY_COOLDOWN_TICKS = 5;
+    private static final int SECONDARY_ECHO_TICKS = 1;
 
     private final ToolType type;
 
@@ -87,10 +88,18 @@ public class ToolItem extends Item {
         super.appendHoverText(stack, context, tooltip, flag);
     }
 
-    /** Right-click on a block -> primary action. */
+    /**
+     * Right-click on a block -> primary action. The client reports SUCCESS
+     * without doing anything: the server runs the actual action, and consuming
+     * the click keeps vanilla from falling through to the off hand (which
+     * would e.g. also place the off-hand block on the same click).
+     */
     @Override
     public InteractionResult useOn(UseOnContext ctx) {
-        if (ctx.getLevel().isClientSide || !(ctx.getPlayer() instanceof ServerPlayer sp)) {
+        if (ctx.getLevel().isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        if (!(ctx.getPlayer() instanceof ServerPlayer sp)) {
             return InteractionResult.PASS;
         }
         boolean acted = dispatch(sp, ctx.getClickedPos(), ctx.getClickedFace(), true);
@@ -100,11 +109,10 @@ public class ToolItem extends Item {
     /** Left-click on a block -> secondary action. Invoked from the AttackBlockCallback handler. */
     public boolean runSecondary(ServerPlayer sp, BlockPos pos, Direction face) {
         long now = sp.level().getGameTime();
-        Long last = lastSecondaryTick.get(sp.getUUID());
-        if (last != null && now - last < SECONDARY_COOLDOWN_TICKS) {
+        Long last = lastSecondaryTick.put(sp.getUUID(), now);
+        if (last != null && now - last <= SECONDARY_ECHO_TICKS) {
             return false;
         }
-        lastSecondaryTick.put(sp.getUUID(), now);
         return dispatch(sp, pos, face, false);
     }
 

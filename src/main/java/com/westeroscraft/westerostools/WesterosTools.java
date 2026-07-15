@@ -31,6 +31,7 @@ import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import net.minecraft.CrashReport;
@@ -41,6 +42,7 @@ import net.minecraft.world.InteractionResult;
 
 import com.westeroscraft.westerostools.BlockDef.Variant;
 import com.westeroscraft.westerostools.commands.WCTOOLCommand;
+import com.westeroscraft.westerostools.item.ClientClickTracker;
 import com.westeroscraft.westerostools.item.ModItems;
 import com.westeroscraft.westerostools.item.ModItemGroups;
 import com.westeroscraft.westerostools.item.ToolItem;
@@ -102,14 +104,40 @@ public class WesterosTools implements ModInitializer {
 		// predict a break (instant in creative) that the server rejects, leaving a
 		// ghost block for actions that don't edit the clicked block. The secondary
 		// action only runs server-side.
+		//
+		// Cancelling also skips vanilla's creative break cooldown, so this event
+		// re-fires twice on the press tick and then every client tick the button is
+		// held — one click must not become several actions. The client therefore
+		// gates on ClientClickTracker: only the first event of a physical press
+		// returns SUCCESS (which makes Fabric send the attack to the server);
+		// re-fires return FAIL, which still cancels the break but sends nothing.
 		AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
 				if (!(player.getItemInHand(hand).getItem() instanceof ToolItem tool)) {
 						return InteractionResult.PASS;
 				}
-				if (!world.isClientSide && player instanceof ServerPlayer sp) {
+				if (world.isClientSide) {
+						return ClientClickTracker.acceptAttack(world.getGameTime())
+								? InteractionResult.SUCCESS : InteractionResult.FAIL;
+				}
+				if (player instanceof ServerPlayer sp) {
 						tool.runSecondary(sp, pos, direction);
 				}
 				return InteractionResult.SUCCESS;
+		});
+
+		// Right-click repeats every 4 client ticks while the button is held
+		// (vanilla hold-to-use), which turns a slightly long click into several
+		// primary actions. Gate it the same way: re-fires while held return FAIL
+		// before the client sends the use packet, so the server only ever sees the
+		// first click of a press. Server side stays PASS so vanilla proceeds to
+		// ToolItem.useOn.
+		UseBlockCallback.EVENT.register((player, world, hand, hit) -> {
+				if (world.isClientSide
+						&& player.getItemInHand(hand).getItem() instanceof ToolItem
+						&& !ClientClickTracker.acceptUse(world.getGameTime())) {
+						return InteractionResult.FAIL;
+				}
+				return InteractionResult.PASS;
 		});
 
 		// Release a player's per-player Paint tool when they disconnect.
